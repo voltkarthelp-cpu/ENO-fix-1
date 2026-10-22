@@ -1,0 +1,8 @@
+{
+  "name": "Remix Card Clash - Multiplayer UNO Card Game",
+  "description": "Modern multiplayer UNO-inspired card game with local Wi-Fi hosting, up to 8 players, background music, and responsive mobile-first gameplay.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
