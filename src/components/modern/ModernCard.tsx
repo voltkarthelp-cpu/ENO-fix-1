@@ -195,34 +195,47 @@ export const ModernCard: React.FC<ModernCardProps> = ({
     );
   };
 
+  const isUniqueCard =
+    card && (card.type === 'wild' || card.type === 'wild4' || card.type === 'skip' || card.type === 'reverse' || card.type === 'draw2');
+
   return (
     <div
       onClick={isPlayable ? onClick : undefined}
       className={`relative ${currentSize.w} ${currentSize.h} ${currentSize.rounded} ${style.bg} ${style.border} border-2 card-shadow transition-all duration-200 select-none overflow-hidden ${
         isPlayable
-          ? 'cursor-pointer hover:-translate-y-3 hover:scale-105 active:scale-95 ring-3 ring-amber-300 ring-offset-2 ring-offset-slate-950 card-shadow-hover'
+          ? isUniqueCard
+            ? 'cursor-pointer hover:-translate-y-3.5 hover:scale-105 active:scale-95 ring-3 ring-amber-300 ring-offset-2 ring-offset-slate-950 shadow-[0_0_20px_rgba(251,191,36,0.6)] animate-pulse'
+            : 'cursor-pointer hover:-translate-y-3 hover:scale-105 active:scale-95 ring-3 ring-amber-300 ring-offset-2 ring-offset-slate-950 card-shadow-hover'
           : 'opacity-75 saturate-70 cursor-not-allowed'
-      } ${isSelected ? '-translate-y-4 ring-4 ring-white' : ''} ${className}`}
+      } ${isSelected ? '-translate-y-4 ring-4 ring-white shadow-2xl' : ''} ${className}`}
     >
-      {/* Specular Card Sheen Overlay */}
-      <div className="card-gradient-sheen absolute inset-0 pointer-events-none" />
-
-      {/* Top Left Corner */}
-      <div className={`absolute top-0 left-0 ${currentSize.corner} font-heading font-extrabold leading-none ${style.text}`}>
-        <span className="drop-shadow">{symbol}</span>
-      </div>
-
-      {/* Center Ellipse Capsule */}
-      <div className="absolute inset-2 sm:inset-3 rounded-xl bg-white/15 backdrop-blur-xs border border-white/25 flex items-center justify-center shadow-inner">
+      {/* Center Ellipse Capsule (rendered under the corners) */}
+      <div className="absolute inset-2 sm:inset-3 rounded-xl bg-white/15 backdrop-blur-xs border border-white/25 flex items-center justify-center shadow-inner z-0">
         <div className={style.text}>
           {renderCenterGraphic()}
         </div>
       </div>
 
-      {/* Bottom Right Corner (Inverted) */}
-      <div className={`absolute bottom-0 right-0 ${currentSize.corner} font-heading font-extrabold leading-none rotate-180 ${style.text}`}>
-        <span className="drop-shadow">{symbol}</span>
+      {/* Top Left Corner (strictly foreground z-10 like bottom-right) */}
+      <div
+        className={`absolute top-0 left-0 z-10 ${currentSize.corner} font-heading font-black leading-none ${style.text} pointer-events-none`}
+      >
+        <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)] filter font-black text-sm sm:text-base tracking-tight">
+          {symbol}
+        </span>
       </div>
+
+      {/* Bottom Right Corner (Inverted, foreground z-10) */}
+      <div
+        className={`absolute bottom-0 right-0 z-10 ${currentSize.corner} font-heading font-black leading-none rotate-180 ${style.text} pointer-events-none`}
+      >
+        <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)] filter font-black text-sm sm:text-base tracking-tight">
+          {symbol}
+        </span>
+      </div>
+
+      {/* Specular Card Sheen Overlay */}
+      <div className="card-gradient-sheen absolute inset-0 pointer-events-none z-20" />
     </div>
   );
 };

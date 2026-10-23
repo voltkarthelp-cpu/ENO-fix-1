@@ -1,11 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import { RotateCw, RotateCcw, Volume2, VolumeX, Music, BookOpen, AlertCircle, Sparkles, AlertTriangle, Zap, LogOut } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import {
+  RotateCw,
+  RotateCcw,
+  Volume2,
+  VolumeX,
+  Music,
+  BookOpen,
+  AlertCircle,
+  Sparkles,
+  AlertTriangle,
+  Zap,
+  LogOut,
+  Mic,
+  MicOff,
+  Bell,
+  Flame,
+} from 'lucide-react';
 import { Card, CardColor, GameTableState, Player } from '../../types/game';
 import { ModernCard } from '../modern/ModernCard';
 import { ModernAvatar } from '../modern/ModernAvatar';
 import { PixelParticles } from '../pixel/PixelParticles';
 import { WildColorPicker } from './WildColorPicker';
 import { RoundEndModal } from './RoundEndModal';
+import { ActionCardOverlay } from '../common/ActionCardOverlay';
 import { isCardPlayable } from '../../game/cardEngine';
 import { soundFx } from '../../sound/soundFx';
 
@@ -50,6 +67,7 @@ export const GameTable: React.FC<GameTableProps> = ({
   const [unoCallToggled, setUnoCallToggled] = useState(false);
   const [particleTrigger, setParticleTrigger] = useState(0);
   const [particleType, setParticleType] = useState<'burst' | 'victory' | 'wild'>('burst');
+  const [voiceMuted, setVoiceMuted] = useState(soundFx.isVoiceMuted());
 
   const {
     players,
@@ -72,6 +90,35 @@ export const GameTable: React.FC<GameTableProps> = ({
 
   // Up to 7 opponents
   const opponents = players.filter((p) => p.id !== localPlayer.id);
+
+  // Track previous turn to trigger audio and voice alerts when turn begins
+  const wasMyTurnRef = useRef(false);
+  useEffect(() => {
+    if (isMyTurn && !wasMyTurnRef.current) {
+      soundFx.playTurnAlert();
+      soundFx.speakTurn();
+    }
+    wasMyTurnRef.current = isMyTurn;
+  }, [isMyTurn]);
+
+  // Voice announcements for special actions
+  const prevActionRef = useRef<string>('');
+  useEffect(() => {
+    if (!tableState.lastActionMessage || tableState.lastActionMessage === prevActionRef.current) return;
+    prevActionRef.current = tableState.lastActionMessage;
+
+    if (tableState.lastActionType === 'skip') {
+      soundFx.speakSkip();
+    } else if (tableState.lastActionType === 'reverse') {
+      soundFx.speakReverse();
+    } else if (tableState.lastActionType === 'penalty') {
+      soundFx.speakDraw(tableState.pendingDrawPenalty || 2);
+    } else if (tableState.lastActionType === 'wild') {
+      soundFx.speakWild(tableState.activeColor);
+    } else if (tableState.lastActionType === 'uno') {
+      soundFx.speakUno();
+    }
+  }, [tableState.lastActionMessage, tableState.lastActionType, tableState.pendingDrawPenalty, tableState.activeColor]);
 
   // Particle feedback on move changes
   useEffect(() => {
@@ -119,6 +166,12 @@ export const GameTable: React.FC<GameTableProps> = ({
     setUnoCallToggled(false);
   };
 
+  const handleToggleVoice = () => {
+    const isNowMuted = soundFx.toggleVoice();
+    setVoiceMuted(isNowMuted);
+    if (!isNowMuted) soundFx.playClick();
+  };
+
   // Color border / highlight mapping for active color
   const activeColorTheme: Record<CardColor, { bg: string; text: string; ring: string }> = {
     red: { bg: 'bg-rose-600', text: 'text-rose-400', ring: 'border-rose-500/80 shadow-[0_0_20px_rgba(244,63,94,0.3)]' },
@@ -138,6 +191,13 @@ export const GameTable: React.FC<GameTableProps> = ({
       {/* Visual Particle Overlay */}
       <PixelParticles triggerKey={particleTrigger} type={particleType} />
 
+      {/* Action Card Dramatic Centerpiece Animation Overlay */}
+      <ActionCardOverlay
+        lastActionMessage={lastActionMessage}
+        lastActionType={tableState.lastActionType}
+        activeColor={activeColor}
+      />
+
       {/* Top Modern HUD Bar */}
       <header className="relative z-20 w-full px-4 py-2.5 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 flex items-center justify-between text-xs">
         <div className="flex items-center gap-3">
@@ -154,15 +214,30 @@ export const GameTable: React.FC<GameTableProps> = ({
         <div
           className={`px-4 py-1.5 rounded-full border text-xs font-bold flex items-center gap-2 transition-all ${
             isMyTurn
-              ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-md shadow-amber-950/40 animate-pulse'
+              ? 'bg-amber-400 text-slate-950 border-amber-300 shadow-lg shadow-amber-950/60 ring-2 ring-amber-400/50 scale-105 animate-pulse'
               : 'bg-slate-900/90 text-slate-300 border-slate-700/80'
           }`}
         >
+          {isMyTurn ? <Bell className="w-3.5 h-3.5 text-slate-950 animate-bounce" /> : null}
           <span>{isMyTurn ? '★ YOUR TURN' : `${currentPlayer?.name.toUpperCase()}'S TURN`}</span>
         </div>
 
-        {/* Utility Audio & Rules Controls */}
-        <div className="flex items-center gap-2">
+        {/* Utility Audio, Voice & Rules Controls */}
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          {/* Voice Effects Toggle */}
+          <button
+            type="button"
+            onClick={handleToggleVoice}
+            className={`p-2 rounded-lg border transition-colors cursor-pointer ${
+              !voiceMuted
+                ? 'bg-amber-500/15 border-amber-500/40 text-amber-400 shadow-sm'
+                : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white'
+            }`}
+            title={voiceMuted ? 'Voice Announcements: OFF (Tap to Enable)' : 'Voice Announcements: ON'}
+          >
+            {!voiceMuted ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
+          </button>
+
           {/* Background Music Toggle */}
           <button
             type="button"
@@ -172,7 +247,7 @@ export const GameTable: React.FC<GameTableProps> = ({
             }}
             className={`p-2 rounded-lg border transition-colors cursor-pointer ${
               !musicMuted
-                ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400'
+                ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-400 shadow-sm'
                 : 'bg-slate-900 border-slate-800 text-slate-500 hover:text-white'
             }`}
             title="Toggle Background Music [M]"
@@ -249,7 +324,7 @@ export const GameTable: React.FC<GameTableProps> = ({
               key={opp.id}
               className={`p-2 sm:p-2.5 rounded-xl border transition-all flex items-center gap-2.5 ${
                 isOppTurn
-                  ? 'bg-slate-900/95 border-amber-400 shadow-lg shadow-amber-950/40 scale-105'
+                  ? 'bg-slate-900/95 border-amber-400 shadow-lg shadow-amber-950/40 ring-2 ring-amber-400/40 scale-105'
                   : 'bg-slate-950/80 border-slate-800/80 backdrop-blur-xs'
               }`}
             >
@@ -264,7 +339,9 @@ export const GameTable: React.FC<GameTableProps> = ({
                   {opp.name}
                 </div>
                 <div className="text-[10px] text-slate-400 flex items-center gap-2 mt-0.5">
-                  <span className="font-bold text-amber-400">{opp.handCount} Cards</span>
+                  <span className={`font-bold ${hasOne ? 'text-rose-400 animate-pulse' : 'text-amber-400'}`}>
+                    {opp.handCount} {opp.handCount === 1 ? 'CARD!' : 'Cards'}
+                  </span>
                   <span>·</span>
                   <span>{opp.score} pts</span>
                 </div>
@@ -275,12 +352,21 @@ export const GameTable: React.FC<GameTableProps> = ({
       </div>
 
       {/* Center Modern Casino Felt Game Table Mat */}
-      <main className="relative z-10 flex-1 w-full max-w-4xl mx-auto px-4 flex flex-col items-center justify-center my-2">
+      <main className="relative z-10 flex-1 w-full max-w-4xl mx-auto px-4 flex flex-col items-center justify-center my-1 sm:my-2">
+        {/* Prominent Floating Player Turn Banner */}
+        {isMyTurn && (
+          <div className="w-full max-w-xl mx-auto mb-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500/20 via-yellow-400/30 to-amber-500/20 border-2 border-amber-400 text-amber-200 font-heading font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-[0_0_25px_rgba(251,191,36,0.4)] animate-bounce tracking-wide select-none">
+            <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
+            <span>IT'S YOUR TURN! TAP A CARD TO PLAY OR DRAW FROM DECK</span>
+            <Sparkles className="w-4 h-4 text-amber-300 animate-spin" />
+          </div>
+        )}
+
         {/* Luxury Felt Table Container */}
         <div
-          className={`relative w-full max-w-2xl py-8 px-6 felt-table border-2 ${
+          className={`relative w-full max-w-2xl py-6 sm:py-8 px-4 sm:px-6 felt-table border-2 ${
             activeColorTheme[activeColor].ring
-          } rounded-3xl card-shadow flex flex-col items-center justify-between gap-6 transition-colors duration-300`}
+          } rounded-3xl card-shadow flex flex-col items-center justify-between gap-4 sm:gap-6 transition-colors duration-300`}
         >
           {/* Top Info Bar inside Table: Direction & Active Color Beacon */}
           <div className="relative z-10 w-full flex items-center justify-between px-3 text-xs font-semibold">
@@ -309,7 +395,7 @@ export const GameTable: React.FC<GameTableProps> = ({
           </div>
 
           {/* Center Arena: Draw Pile & Discard Pile */}
-          <div className="relative z-10 flex items-center justify-center gap-8 sm:gap-14 my-2">
+          <div className="relative z-10 flex items-center justify-center gap-8 sm:gap-14 my-1">
             {/* Draw Pile (Deck) */}
             <div className="flex flex-col items-center gap-2">
               <div
@@ -321,7 +407,7 @@ export const GameTable: React.FC<GameTableProps> = ({
                   }
                 }}
                 className={`relative group cursor-pointer transition-transform ${
-                  isMyTurn ? 'hover:scale-105 active:scale-95' : 'opacity-85 cursor-not-allowed'
+                  isMyTurn ? 'hover:scale-105 active:scale-95 ring-3 ring-sky-400 rounded-2xl' : 'opacity-85 cursor-not-allowed'
                 }`}
                 title={isMyTurn ? 'Tap to draw a card' : "Wait for your turn"}
               >
@@ -330,8 +416,8 @@ export const GameTable: React.FC<GameTableProps> = ({
                   {drawPileCount}
                 </span>
               </div>
-              <span className="text-xs font-medium text-slate-300">
-                {isMyTurn ? 'Tap to Draw' : 'Draw Deck'}
+              <span className="text-xs font-semibold text-slate-300 flex items-center gap-1">
+                {isMyTurn ? <span className="text-sky-300 font-bold">Tap to Draw</span> : 'Draw Deck'}
               </span>
             </div>
 
@@ -362,7 +448,13 @@ export const GameTable: React.FC<GameTableProps> = ({
       </main>
 
       {/* Bottom Area: Controls & Player Hand */}
-      <footer className="relative z-20 w-full bg-slate-950/95 backdrop-blur-md border-t border-slate-800 p-3 sm:p-5 flex flex-col gap-3">
+      <footer
+        className={`relative z-20 w-full backdrop-blur-md border-t p-3 sm:p-5 flex flex-col gap-3 transition-all duration-300 ${
+          isMyTurn
+            ? 'bg-slate-950/98 border-amber-400/90 shadow-[0_-12px_45px_rgba(251,191,36,0.3)] ring-2 ring-amber-400/40'
+            : 'bg-slate-950/95 border-slate-800'
+        }`}
+      >
         {/* Action Controls Toolbar */}
         <div className="max-w-4xl mx-auto w-full flex items-center justify-between px-2 gap-3">
           {/* Player Identity Info */}
@@ -374,9 +466,17 @@ export const GameTable: React.FC<GameTableProps> = ({
                 <span className="text-[10px] font-bold bg-sky-600/30 text-sky-300 border border-sky-500/40 px-2 py-0.5 rounded-full uppercase">
                   YOU
                 </span>
+                {isMyTurn && (
+                  <span className="text-[10px] font-extrabold bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full uppercase animate-pulse">
+                    YOUR TURN
+                  </span>
+                )}
               </div>
               <div className="text-xs text-slate-400">
-                <strong className="text-slate-200">{localPlayer.hand.length} Cards</strong> · {localPlayer.score} pts
+                <strong className={localPlayer.hand.length === 1 ? 'text-rose-400 font-extrabold text-sm' : 'text-slate-200'}>
+                  {localPlayer.hand.length} {localPlayer.hand.length === 1 ? 'CARD LEFT!' : 'Cards'}
+                </strong>{' '}
+                · {localPlayer.score} pts
               </div>
             </div>
           </div>
@@ -398,22 +498,52 @@ export const GameTable: React.FC<GameTableProps> = ({
               </button>
             )}
 
-            {/* CALL UNO Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setUnoCallToggled(!unoCallToggled);
-                onCallUno();
-              }}
-              className={`py-2 px-4 rounded-xl font-heading font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-md ${
-                localPlayer.hand.length <= 2 || unoCallToggled
-                  ? 'bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 animate-pulse shadow-amber-950/60 scale-105'
-                  : 'bg-slate-800 text-slate-400 hover:text-white border border-slate-700'
-              }`}
-            >
-              <Sparkles className="w-4 h-4 fill-current" />
-              <span>{unoCallToggled || localPlayer.hasCalledUno ? 'UNO CALLED!' : 'CALL UNO!'}</span>
-            </button>
+            {/* CALL UNO Button - Specially enabled when 1 card left */}
+            {localPlayer.hand.length === 1 ? (
+              <button
+                type="button"
+                onClick={() => {
+                  soundFx.playClick();
+                  onCallUno();
+                }}
+                className={`py-2 px-4 rounded-xl font-heading font-black text-xs sm:text-sm transition-all flex items-center gap-2 cursor-pointer shadow-xl ${
+                  localPlayer.hasCalledUno
+                    ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/60'
+                    : 'bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 hover:from-red-500 hover:to-amber-400 text-white animate-bounce shadow-red-950/80 ring-4 ring-yellow-400/80 scale-105'
+                }`}
+                title="Press to call UNO!"
+              >
+                <Sparkles className="w-4 h-4 fill-current animate-spin" />
+                <span>{localPlayer.hasCalledUno ? '✓ UNO CALLED!' : '🚨 CALL UNO NOW! (1 CARD) 🚨'}</span>
+              </button>
+            ) : localPlayer.hand.length === 2 ? (
+              <button
+                type="button"
+                onClick={() => {
+                  soundFx.playClick();
+                  setUnoCallToggled(!unoCallToggled);
+                  onCallUno();
+                }}
+                className={`py-2 px-3.5 rounded-xl font-heading font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer shadow-md ${
+                  unoCallToggled || localPlayer.hasCalledUno
+                    ? 'bg-amber-400 text-slate-950 ring-2 ring-amber-300'
+                    : 'bg-slate-800 hover:bg-slate-700 text-amber-300 border border-amber-400/40'
+                }`}
+                title="Pre-call UNO before playing your second-to-last card"
+              >
+                <Sparkles className="w-3.5 h-3.5 fill-current" />
+                <span>{unoCallToggled ? 'UNO ARMED (READY)' : 'PRE-CALL UNO (2 CARDS)'}</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="py-2 px-3.5 rounded-xl font-heading font-semibold text-xs bg-slate-900/60 text-slate-600 border border-slate-800/80 flex items-center gap-1.5 cursor-not-allowed opacity-60"
+                title="CALL UNO unlocks when only 1 card remains"
+              >
+                <span>CALL UNO (1 CARD LEFT)</span>
+              </button>
+            )}
 
             {/* Quick Draw Button */}
             {isMyTurn && (

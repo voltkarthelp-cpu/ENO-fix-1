@@ -8,6 +8,7 @@ class ModernAudioEngine {
   private ctx: AudioContext | null = null;
   private sfxMuted: boolean = false;
   private musicMuted: boolean = false;
+  private voiceMuted: boolean = false;
   private sfxVolume: number = 0.5;
   private musicVolume: number = 0.22;
 
@@ -54,6 +55,18 @@ class ModernAudioEngine {
     return this.sfxMuted;
   }
 
+  public isVoiceMuted(): boolean {
+    return this.voiceMuted;
+  }
+
+  public toggleVoice(): boolean {
+    this.voiceMuted = !this.voiceMuted;
+    if (!this.voiceMuted) {
+      this.speak('Voice effects enabled');
+    }
+    return this.voiceMuted;
+  }
+
   public toggleMusic(): boolean {
     this.musicMuted = !this.musicMuted;
     if (this.musicMuted) {
@@ -70,9 +83,10 @@ class ModernAudioEngine {
   }
 
   public toggleAllMute(): boolean {
-    const shouldMute = !(this.sfxMuted && this.musicMuted);
+    const shouldMute = !(this.sfxMuted && this.musicMuted && this.voiceMuted);
     this.sfxMuted = shouldMute;
     this.musicMuted = shouldMute;
+    this.voiceMuted = shouldMute;
     if (shouldMute) {
       this.stopBackgroundMusic();
     } else {
@@ -479,6 +493,98 @@ class ModernAudioEngine {
 
     osc.start(now);
     osc.stop(now + 0.12);
+  }
+
+  /** Player Turn Notification Alert Chime */
+  public playTurnAlert() {
+    if (this.sfxMuted) return;
+    this.initContext();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    // Pleasant 2-tone melodic chime: D5 (587.33Hz) -> A5 (880Hz)
+    const tones = [
+      { freq: 587.33, start: now, dur: 0.18 },
+      { freq: 880.0, start: now + 0.12, dur: 0.35 },
+    ];
+
+    tones.forEach(({ freq, start, dur }) => {
+      const osc = this.ctx!.createOscillator();
+      const gain = this.ctx!.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(freq, start);
+
+      gain.gain.setValueAtTime(this.sfxVolume * 0.55, start);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+
+      osc.connect(gain);
+      gain.connect(this.ctx!.destination);
+
+      osc.start(start);
+      osc.stop(start + dur + 0.05);
+    });
+  }
+
+  // --- SPOKEN VOICE EFFECTS (WEB SPEECH API) ---
+
+  /** General Speech synthesizer */
+  public speak(text: string, force: boolean = false) {
+    if ((this.voiceMuted && !force) || typeof window === 'undefined') return;
+    if (!('speechSynthesis' in window)) return;
+
+    try {
+      window.speechSynthesis.cancel(); // Stop any pending speech
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1.1; // energetic
+      utterance.pitch = 1.05;
+      utterance.volume = 0.85;
+
+      // Select an English voice if available
+      const voices = window.speechSynthesis.getVoices();
+      const enVoice = voices.find((v) => v.lang.startsWith('en'));
+      if (enVoice) {
+        utterance.voice = enVoice;
+      }
+
+      window.speechSynthesis.speak(utterance);
+    } catch {}
+  }
+
+  public speakTurn() {
+    this.speak("Your turn!");
+  }
+
+  public speakUno(playerName?: string) {
+    if (playerName) {
+      this.speak(`${playerName} calls UNO!`);
+    } else {
+      this.speak("UNO!");
+    }
+  }
+
+  public speakSkip() {
+    this.speak("Player skipped!");
+  }
+
+  public speakReverse() {
+    this.speak("Reverse order!");
+  }
+
+  public speakDraw(count: number) {
+    this.speak(`Draw ${count} cards!`);
+  }
+
+  public speakWild(color: string) {
+    this.speak(`Wild! Color is ${color}!`);
+  }
+
+  public speakCaught(targetName: string) {
+    this.speak(`Caught! ${targetName} draws penalty cards!`);
+  }
+
+  public speakRoundWin(winnerName: string) {
+    this.speak(`${winnerName} wins the round!`);
   }
 }
 
