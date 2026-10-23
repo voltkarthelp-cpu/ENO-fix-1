@@ -28,35 +28,35 @@ export const ModernCard: React.FC<ModernCardProps> = ({
 }) => {
   const sizeStyles = {
     xs: {
-      w: 'w-8 sm:w-10',
-      h: 'h-12 sm:h-14',
-      corner: 'text-[9px] p-0.5',
-      center: 'text-xs',
-      iconSize: 'w-3 h-3',
+      w: 'w-7 sm:w-9',
+      h: 'h-10 sm:h-13',
+      corner: 'text-[8px] sm:text-[9px] p-0.5',
+      center: 'text-[10px] sm:text-xs',
+      iconSize: 'w-2.5 h-2.5 sm:w-3 sm:h-3',
       rounded: 'rounded-md',
     },
     sm: {
-      w: 'w-12 sm:w-16',
-      h: 'h-18 sm:h-24',
-      corner: 'text-[10px] sm:text-xs p-1',
-      center: 'text-lg sm:text-xl',
-      iconSize: 'w-4 h-4 sm:w-5 sm:h-5',
+      w: 'w-10 sm:w-14',
+      h: 'h-15 sm:h-20',
+      corner: 'text-[9px] sm:text-[10px] p-0.5 sm:p-1',
+      center: 'text-sm sm:text-base',
+      iconSize: 'w-3 h-3 sm:w-4 sm:h-4',
       rounded: 'rounded-lg sm:rounded-xl',
     },
     md: {
-      w: 'w-16 sm:w-20 md:w-24',
-      h: 'h-24 sm:h-30 md:h-36',
-      corner: 'text-xs sm:text-sm p-1 sm:p-1.5',
-      center: 'text-2xl sm:text-3xl',
-      iconSize: 'w-6 h-6 sm:w-8 sm:h-8',
+      w: 'w-14 sm:w-18 md:w-22',
+      h: 'h-20 sm:h-26 md:h-32',
+      corner: 'text-[10px] sm:text-xs md:text-sm p-0.5 sm:p-1',
+      center: 'text-xl sm:text-2xl md:text-3xl',
+      iconSize: 'w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7',
       rounded: 'rounded-xl sm:rounded-2xl',
     },
     lg: {
-      w: 'w-16 sm:w-20 md:w-26 lg:w-28',
-      h: 'h-24 sm:h-30 md:h-38 lg:h-42',
-      corner: 'text-xs sm:text-sm md:text-base p-1 sm:p-1.5 md:p-2',
-      center: 'text-2xl sm:text-3xl md:text-4xl lg:text-5xl',
-      iconSize: 'w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10',
+      w: 'w-14 sm:w-18 md:w-22 lg:w-26',
+      h: 'h-21 sm:h-27 md:h-33 lg:h-39',
+      corner: 'text-[11px] sm:text-xs md:text-sm p-0.5 sm:p-1',
+      center: 'text-xl sm:text-2xl md:text-3xl lg:text-4xl',
+      iconSize: 'w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8',
       rounded: 'rounded-xl sm:rounded-2xl',
     },
   };
@@ -382,20 +382,20 @@ export const ModernCard: React.FC<ModernCardProps> = ({
         <div className={style.text}>{renderCenterGraphic()}</div>
       </div>
 
-      {/* Top Left Corner (Foreground z-10) */}
+      {/* Top Left Corner (Foreground z-30) */}
       <div
-        className={`absolute top-0 left-0 z-10 ${currentSize.corner} font-heading font-black leading-none ${style.text} pointer-events-none`}
+        className={`absolute top-0.5 left-0.5 z-30 ${currentSize.corner} font-heading font-black leading-none ${style.text} pointer-events-none select-none`}
       >
-        <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)] filter font-black text-xs sm:text-sm md:text-base tracking-tight">
+        <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] filter font-black text-xs sm:text-sm md:text-base tracking-tight">
           {symbol}
         </span>
       </div>
 
-      {/* Bottom Right Corner (Inverted, Foreground z-10) */}
+      {/* Bottom Right Corner (Inverted, Foreground z-30) */}
       <div
-        className={`absolute bottom-0 right-0 z-10 ${currentSize.corner} font-heading font-black leading-none rotate-180 ${style.text} pointer-events-none`}
+        className={`absolute bottom-0.5 right-0.5 z-30 ${currentSize.corner} font-heading font-black leading-none rotate-180 ${style.text} pointer-events-none select-none`}
       >
-        <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.85)] filter font-black text-xs sm:text-sm md:text-base tracking-tight">
+        <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] filter font-black text-xs sm:text-sm md:text-base tracking-tight">
           {symbol}
         </span>
       </div>

@@ -113,11 +113,16 @@ export const RulesModal: React.FC<RulesModalProps> = ({ onClose }) => {
                     <Sparkles className="w-4 h-4 text-amber-300" />
                     <span>THE LIGHT SIDE (WHITE BORDER)</span>
                   </div>
-                  <div className="text-[11px] text-slate-300 flex flex-col gap-1">
-                    <div>• <strong>Colors:</strong> Red, Blue, Green, Yellow</div>
-                    <div>• <strong>Border:</strong> Crisp White Border</div>
-                    <div>• <strong>Penalties:</strong> Draw One (+1), Draw Two (+2), Skip, Reverse, Flip, Wild, Wild Draw Two.</div>
-                    <div className="text-emerald-400 text-[10px] font-semibold mt-1">✓ Casual, friendly competition</div>
+                  <div className="text-[11px] text-slate-300 flex flex-col gap-1.5">
+                    <div>• <strong>Colors:</strong> Classic Red, Blue, Green, Yellow</div>
+                    <div>• <strong>Numbers 0–9:</strong> Standard color or number matching cards.</div>
+                    <div>• <strong>Draw One (+1):</strong> Next player draws 1 card and skips their turn.</div>
+                    <div>• <strong>Reverse:</strong> Reverses play order (acts as skip in 2P).</div>
+                    <div>• <strong>Skip:</strong> Skips next player's turn.</div>
+                    <div>• <strong>Wild:</strong> Choose the next active color.</div>
+                    <div>• <strong>Wild Draw Two (+2):</strong> Choose color, force next player to draw 2 cards and skip their turn. <em>(Can only be played if you hold no matching colors).</em></div>
+                    <div>• <strong>Flip Card:</strong> Instantly triggers transformation to the Dark Side!</div>
+                    <div className="text-emerald-400 text-[10px] font-semibold mt-1">✓ Mild penalties, friendly competition</div>
                   </div>
                 </div>
 

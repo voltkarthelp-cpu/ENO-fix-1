@@ -168,7 +168,7 @@ export default function App() {
       const cardFace = getActiveCardFace(card, currentSide);
       const topDiscard = prev.discardPile[prev.discardPile.length - 1] || null;
 
-      if (!isCardPlayable(card, prev.activeColor, topDiscard, prev.pendingDrawPenalty, prev.rules.stacking, currentSide)) {
+      if (!isCardPlayable(card, prev.activeColor, topDiscard, prev.pendingDrawPenalty, prev.rules.stacking, currentSide, player.hand)) {
         console.warn(`[Fairness Guard] Illegal card play rejected:`, card);
         return;
       }

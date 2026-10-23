@@ -151,7 +151,8 @@ export const GameTable: React.FC<GameTableProps> = ({
       topDiscard,
       pendingDrawPenalty,
       rules.stacking,
-      currentSide
+      currentSide,
+      localPlayer.hand
     );
     if (!playable) {
       soundFx.playError();
@@ -211,7 +212,7 @@ export const GameTable: React.FC<GameTableProps> = ({
   const currentTheme = activeColorTheme[activeColor] || activeColorTheme.red;
 
   return (
-    <div className={`relative min-h-screen w-full ${currentSide === 'dark' ? 'bg-black text-slate-100' : 'bg-slate-950 text-slate-100'} flex flex-col justify-between overflow-hidden select-none transition-colors duration-500`}>
+    <div className={`relative h-[100dvh] max-h-[100dvh] w-full ${currentSide === 'dark' ? 'bg-black text-slate-100' : 'bg-slate-950 text-slate-100'} flex flex-col justify-between overflow-hidden select-none transition-colors duration-500`}>
       {/* Visual Particle Overlay */}
       <PixelParticles triggerKey={particleTrigger} type={particleType} />
 
@@ -224,28 +225,28 @@ export const GameTable: React.FC<GameTableProps> = ({
       />
 
       {/* Top Modern HUD Bar */}
-      <header className="relative z-20 w-full px-3 sm:px-4 py-2 bg-slate-950/90 backdrop-blur-md border-b border-slate-800 flex items-center justify-between text-xs">
-        <div className="flex items-center gap-2 sm:gap-3">
-          <span className="font-heading font-bold text-amber-400 text-xs sm:text-sm tracking-wide">
+      <header className="relative z-20 w-full px-2.5 sm:px-4 py-1.5 sm:py-2 bg-slate-950/95 backdrop-blur-md border-b border-slate-800 flex items-center justify-between text-xs shrink-0">
+        <div className="flex items-center gap-1.5 sm:gap-3">
+          <span className="font-heading font-black text-amber-400 text-xs sm:text-sm tracking-wide">
             ROUND {roundNumber}
           </span>
-          <span className="text-slate-600">·</span>
+          <span className="text-slate-600 hidden xs:inline">·</span>
 
           {/* Mode / Side Indicator */}
           {rules.deckEdition === 'flip' ? (
             <span
               className={`px-2 sm:px-2.5 py-0.5 rounded-full border text-[9px] sm:text-[10px] font-black uppercase tracking-wider flex items-center gap-1 sm:gap-1.5 transition-all ${
                 currentSide === 'dark'
-                  ? 'bg-purple-950/90 text-pink-300 border-pink-400 ring-2 ring-pink-500/40 shadow-lg shadow-purple-950/60 animate-pulse'
-                  : 'bg-slate-900 text-amber-300 border-white/60 shadow-sm'
+                  ? 'bg-purple-950/90 text-pink-300 border-pink-400 ring-1 ring-pink-500/40 shadow-md shadow-purple-950/60 animate-pulse'
+                  : 'bg-slate-900 text-amber-300 border-white/60 shadow-xs'
               }`}
             >
-              {currentSide === 'dark' ? <Moon className="w-3 h-3 text-pink-400" /> : <RefreshCw className="w-3 h-3 text-amber-300" />}
+              {currentSide === 'dark' ? <Moon className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-pink-400" /> : <RefreshCw className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-amber-300" />}
               <span>{currentSide === 'dark' ? 'DARK SIDE 🌌' : 'LIGHT SIDE ☀️'}</span>
             </span>
           ) : rules.deckEdition === 'no_mercy' ? (
             <span className="px-2 py-0.5 rounded-full border text-[9px] sm:text-[10px] font-black uppercase tracking-wider bg-red-950/90 text-red-300 border-red-500 flex items-center gap-1">
-              <Skull className="w-3 h-3 text-red-400" />
+              <Skull className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-red-400" />
               <span>NO MERCY</span>
             </span>
           ) : (
@@ -257,15 +258,15 @@ export const GameTable: React.FC<GameTableProps> = ({
 
         {/* Central Turn Status Pill */}
         <div
-          className={`px-3 sm:px-4 py-1 sm:py-1.5 rounded-full border text-[11px] sm:text-xs font-bold flex items-center gap-1.5 sm:gap-2 transition-all ${
+          className={`px-2.5 sm:px-4 py-1 rounded-full border text-[10px] sm:text-xs font-bold flex items-center gap-1 sm:gap-2 transition-all ${
             isMyTurn
               ? currentSide === 'dark'
-                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border-pink-300 shadow-lg shadow-pink-950/60 ring-2 ring-pink-400/50 scale-105 animate-pulse'
-                : 'bg-amber-400 text-slate-950 border-amber-300 shadow-lg shadow-amber-950/60 ring-2 ring-amber-400/50 scale-105 animate-pulse'
+                ? 'bg-gradient-to-r from-pink-500 to-purple-600 text-white border-pink-300 shadow-md shadow-pink-950/60 ring-2 ring-pink-400/50 animate-pulse'
+                : 'bg-amber-400 text-slate-950 border-amber-300 shadow-md shadow-amber-950/60 ring-2 ring-amber-400/50 animate-pulse'
               : 'bg-slate-900/90 text-slate-300 border-slate-700/80'
           }`}
         >
-          {isMyTurn ? <Bell className="w-3 h-3 text-current animate-bounce" /> : null}
+          {isMyTurn ? <Bell className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-current animate-bounce" /> : null}
           <span>{isMyTurn ? '★ YOUR TURN' : `${currentPlayer?.name.toUpperCase()}'S TURN`}</span>
         </div>
 
@@ -421,40 +422,40 @@ export const GameTable: React.FC<GameTableProps> = ({
       </div>
 
       {/* Center Modern Casino Felt Game Table Mat */}
-      <main className="relative z-10 flex-1 w-full max-w-4xl mx-auto px-2 sm:px-4 flex flex-col items-center justify-center my-0.5 sm:my-2">
+      <main className="relative z-10 flex-1 min-h-0 w-full max-w-4xl mx-auto px-2 sm:px-4 flex flex-col items-center justify-center my-0.5 sm:my-1 overflow-hidden">
         {/* Prominent Floating Player Turn Banner */}
         {isMyTurn && (
-          <div className={`w-full max-w-xl mx-auto mb-1.5 sm:mb-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl sm:rounded-2xl ${
+          <div className={`w-full max-w-md mx-auto mb-1 px-3 py-1 rounded-full ${
             currentSide === 'dark'
-              ? 'bg-gradient-to-r from-pink-500/20 via-purple-600/30 to-pink-500/20 border-2 border-pink-400 text-pink-200 shadow-[0_0_25px_rgba(236,72,153,0.5)]'
-              : 'bg-gradient-to-r from-amber-500/20 via-yellow-400/30 to-amber-500/20 border-2 border-amber-400 text-amber-200 shadow-[0_0_25px_rgba(251,191,36,0.4)]'
-          } font-heading font-black text-[11px] sm:text-sm flex items-center justify-center gap-1.5 sm:gap-2 animate-bounce tracking-wide select-none`}>
-            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-current animate-spin" />
+              ? 'bg-gradient-to-r from-pink-500/20 via-purple-600/30 to-pink-500/20 border border-pink-400 text-pink-200 shadow-[0_0_20px_rgba(236,72,153,0.4)]'
+              : 'bg-gradient-to-r from-amber-500/20 via-yellow-400/30 to-amber-500/20 border border-amber-400 text-amber-200 shadow-[0_0_20px_rgba(251,191,36,0.35)]'
+          } font-heading font-black text-[10px] sm:text-xs flex items-center justify-center gap-1.5 animate-bounce tracking-wide select-none shrink-0`}>
+            <Sparkles className="w-3 h-3 text-current animate-spin" />
             <span>IT'S YOUR TURN! TAP A CARD OR DRAW DECK</span>
-            <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-current animate-spin" />
+            <Sparkles className="w-3 h-3 text-current animate-spin" />
           </div>
         )}
 
         {/* Luxury Felt Table Container */}
         <div
-          className={`relative w-full max-w-2xl py-3.5 sm:py-7 px-3 sm:px-6 ${
+          className={`relative w-full max-w-xl py-2 sm:py-4 px-2.5 sm:px-5 ${
             currentSide === 'dark'
-              ? 'bg-gradient-to-b from-purple-950/70 via-slate-950 to-black border-2 border-purple-500/80 shadow-[0_0_40px_rgba(168,85,247,0.4)]'
+              ? 'bg-gradient-to-b from-purple-950/70 via-slate-950 to-black border-2 border-purple-500/80 shadow-[0_0_30px_rgba(168,85,247,0.35)]'
               : `felt-table border-2 ${currentTheme.ring}`
-          } rounded-2xl sm:rounded-3xl card-shadow flex flex-col items-center justify-between gap-3 sm:gap-6 transition-all duration-500`}
+          } rounded-2xl sm:rounded-3xl card-shadow flex flex-col items-center justify-between gap-1.5 sm:gap-3 transition-all duration-500 my-auto`}
         >
           {/* Top Info Bar inside Table: Direction & Active Color Beacon */}
-          <div className="relative z-10 w-full flex items-center justify-between px-3 text-xs font-semibold">
+          <div className="relative z-10 w-full flex items-center justify-between px-2 text-[10px] sm:text-xs font-semibold">
             {/* Play Direction */}
-            <div className="flex items-center gap-1.5 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10 text-slate-300">
+            <div className="flex items-center gap-1 sm:gap-1.5 bg-black/50 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 text-slate-300">
               {direction === 1 ? (
                 <>
-                  <RotateCw className="w-3.5 h-3.5 text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
+                  <RotateCw className="w-3 h-3 text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
                   <span>Clockwise</span>
                 </>
               ) : (
                 <>
-                  <RotateCcw className="w-3.5 h-3.5 text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
+                  <RotateCcw className="w-3 h-3 text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
                   <span>Counter-Clockwise</span>
                 </>
               )}
@@ -462,17 +463,17 @@ export const GameTable: React.FC<GameTableProps> = ({
 
             {/* Active Color Beacon */}
             <div
-              className={`flex items-center gap-2 px-3.5 py-1.5 rounded-full font-bold text-white shadow-md ${currentTheme.bg}`}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-bold text-white shadow-md ${currentTheme.bg}`}
             >
-              <div className="w-2.5 h-2.5 rounded-full bg-white shadow-sm" />
+              <div className="w-2 h-2 rounded-full bg-white shadow-sm" />
               <span className="uppercase tracking-wider">Active: {activeColor}</span>
             </div>
           </div>
 
           {/* Center Arena: Draw Pile & Discard Pile */}
-          <div className="relative z-10 flex items-center justify-center gap-8 sm:gap-14 my-1">
+          <div className="relative z-10 flex items-center justify-center gap-5 sm:gap-12 my-0.5 sm:my-1">
             {/* Draw Pile (Deck) */}
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-1">
               <div
                 onClick={() => {
                   if (isMyTurn) {
@@ -482,33 +483,33 @@ export const GameTable: React.FC<GameTableProps> = ({
                   }
                 }}
                 className={`relative group cursor-pointer transition-transform ${
-                  isMyTurn ? 'hover:scale-105 active:scale-95 ring-3 ring-sky-400 rounded-2xl' : 'opacity-85 cursor-not-allowed'
+                  isMyTurn ? 'hover:scale-105 active:scale-95 ring-3 ring-sky-400 rounded-xl sm:rounded-2xl' : 'opacity-85 cursor-not-allowed'
                 }`}
                 title={isMyTurn ? 'Tap to draw a card' : "Wait for your turn"}
               >
                 <ModernCard isBack size="md" side={currentSide} />
-                <span className="absolute -top-2 -right-2 bg-slate-950 border border-slate-700 text-amber-300 text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+                <span className="absolute -top-1.5 -right-1.5 bg-slate-950 border border-slate-700 text-amber-300 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded-full shadow">
                   {drawPileCount}
                 </span>
               </div>
-              <span className="text-xs font-semibold text-slate-300 flex items-center gap-1">
+              <span className="text-[10px] sm:text-xs font-semibold text-slate-300 flex items-center gap-1">
                 {isMyTurn ? <span className="text-sky-300 font-bold">Tap to Draw</span> : 'Draw Deck'}
               </span>
             </div>
 
             {/* Center Discard Pile */}
-            <div className="flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-1">
               <div className="relative">
                 <ModernCard card={topDiscard} size="md" side={currentSide} isPlayable={false} />
               </div>
-              <span className="text-xs font-medium text-slate-300">Discard Pile</span>
+              <span className="text-[10px] sm:text-xs font-medium text-slate-300">Discard Pile</span>
             </div>
           </div>
 
           {/* Stacking Penalty Alert Banner */}
           {pendingDrawPenalty > 0 && (
-            <div className="relative z-10 px-4 py-2 rounded-xl bg-rose-950/90 border border-rose-500 font-bold text-xs text-rose-200 flex items-center gap-2 animate-bounce shadow-lg">
-              <AlertTriangle className="w-4 h-4 text-rose-400 fill-current" />
+            <div className="relative z-10 px-3 py-1 rounded-lg sm:rounded-xl bg-rose-950/90 border border-rose-500 font-bold text-[10px] sm:text-xs text-rose-200 flex items-center gap-1.5 animate-bounce shadow-md">
+              <AlertTriangle className="w-3.5 h-3.5 text-rose-400 fill-current" />
               <span>
                 Stacking Active! Penalty pool is +{pendingDrawPenalty} cards.
               </span>
@@ -516,7 +517,7 @@ export const GameTable: React.FC<GameTableProps> = ({
           )}
 
           {/* Action Log Ticker */}
-          <div className="relative z-10 w-full max-w-md bg-black/60 backdrop-blur-md border border-white/10 px-4 py-2 rounded-xl text-center text-xs font-medium text-amber-300 truncate shadow-inner">
+          <div className="relative z-10 w-full max-w-sm bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1 rounded-lg text-center text-[10px] sm:text-xs font-medium text-amber-300 truncate shadow-inner">
             {lastActionMessage}
           </div>
         </div>
@@ -524,33 +525,33 @@ export const GameTable: React.FC<GameTableProps> = ({
 
       {/* Bottom Area: Controls & Player Hand */}
       <footer
-        className={`relative z-20 w-full backdrop-blur-md border-t p-2.5 sm:p-4 flex flex-col gap-2.5 transition-all duration-300 ${
+        className={`relative z-20 w-full shrink-0 backdrop-blur-md border-t px-2 py-1.5 sm:py-2.5 pb-safe flex flex-col gap-1 sm:gap-2 transition-all duration-300 ${
           isMyTurn
             ? currentSide === 'dark'
-              ? 'bg-black/98 border-pink-500/80 shadow-[0_-12px_45px_rgba(236,72,153,0.3)] ring-2 ring-pink-500/40'
-              : 'bg-slate-950/98 border-amber-400/90 shadow-[0_-12px_45px_rgba(251,191,36,0.3)] ring-2 ring-amber-400/40'
+              ? 'bg-black/98 border-pink-500/80 shadow-[0_-8px_30px_rgba(236,72,153,0.25)] ring-1 ring-pink-500/40'
+              : 'bg-slate-950/98 border-amber-400/90 shadow-[0_-8px_30px_rgba(251,191,36,0.25)] ring-1 ring-amber-400/40'
             : 'bg-slate-950/95 border-slate-800'
         }`}
       >
         {/* Action Controls Toolbar */}
-        <div className="max-w-4xl mx-auto w-full flex items-center justify-between px-2 gap-2 sm:gap-3 flex-wrap sm:flex-nowrap">
+        <div className="max-w-4xl mx-auto w-full flex items-center justify-between px-1 gap-1.5 sm:gap-3 flex-wrap sm:flex-nowrap">
           {/* Player Identity Info */}
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             <ModernAvatar avatar={localPlayer.avatar} size="sm" isCurrentTurn={isMyTurn} />
-            <div>
-              <div className="font-semibold text-xs sm:text-sm text-white flex items-center gap-1.5 sm:gap-2">
-                <span>{localPlayer.name}</span>
-                <span className="text-[9px] font-bold bg-sky-600/30 text-sky-300 border border-sky-500/40 px-1.5 py-0.2 rounded-full uppercase">
+            <div className="leading-tight">
+              <div className="font-semibold text-xs sm:text-sm text-white flex items-center gap-1 sm:gap-1.5">
+                <span className="truncate max-w-[80px] xs:max-w-[120px] sm:max-w-none">{localPlayer.name}</span>
+                <span className="text-[8px] sm:text-[9px] font-bold bg-sky-600/30 text-sky-300 border border-sky-500/40 px-1 py-0.2 rounded-full uppercase">
                   YOU
                 </span>
                 {isMyTurn && (
-                  <span className={`text-[9px] font-extrabold ${currentSide === 'dark' ? 'bg-pink-500 text-white' : 'bg-amber-400 text-slate-950'} px-2 py-0.5 rounded-full uppercase animate-pulse`}>
-                    YOUR TURN
+                  <span className={`text-[8px] sm:text-[9px] font-extrabold ${currentSide === 'dark' ? 'bg-pink-500 text-white' : 'bg-amber-400 text-slate-950'} px-1.5 py-0.2 rounded-full uppercase animate-pulse`}>
+                    TURN
                   </span>
                 )}
               </div>
-              <div className="text-[11px] sm:text-xs text-slate-400">
-                <strong className={localPlayer.hand.length === 1 ? 'text-rose-400 font-extrabold text-sm' : 'text-slate-200'}>
+              <div className="text-[10px] sm:text-xs text-slate-400">
+                <strong className={localPlayer.hand.length === 1 ? 'text-rose-400 font-extrabold' : 'text-slate-200'}>
                   {localPlayer.hand.length} {localPlayer.hand.length === 1 ? 'CARD LEFT!' : 'Cards'}
                 </strong>{' '}
                 · {localPlayer.score} pts
@@ -559,7 +560,7 @@ export const GameTable: React.FC<GameTableProps> = ({
           </div>
 
           {/* Action Buttons: Peek Reverse, CALL UNO, CATCH UNO, DRAW */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5">
+          <div className="flex items-center gap-1 sm:gap-2">
             {/* Peek Reverse Side Button (UNO Flip feature) */}
             {rules.deckEdition === 'flip' && (
               <button
@@ -568,16 +569,16 @@ export const GameTable: React.FC<GameTableProps> = ({
                   soundFx.playClick();
                   setPeekReverse(!peekReverse);
                 }}
-                className={`py-1.5 sm:py-2 px-2 sm:px-3 rounded-xl font-heading font-bold text-xs border transition-all flex items-center gap-1.5 cursor-pointer shadow-sm shrink-0 ${
+                className={`py-1 sm:py-1.5 px-2 sm:px-2.5 rounded-lg sm:rounded-xl font-heading font-bold text-[10px] sm:text-xs border transition-all flex items-center gap-1 cursor-pointer shadow-xs shrink-0 min-h-[34px] sm:min-h-[38px] ${
                   peekReverse
                     ? 'bg-amber-400 text-slate-950 border-amber-300 ring-2 ring-amber-300/50'
                     : 'bg-slate-900/90 text-amber-300 border-amber-400/40 hover:bg-slate-800'
                 }`}
                 title="Preview what cards you'll have if the game flips"
               >
-                <Eye className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">{peekReverse ? 'ACTIVE SIDE' : 'PEEK REVERSE'}</span>
-                <span className="sm:hidden">{peekReverse ? 'FRONT' : 'PEEK'}</span>
+                <Eye className="w-3 h-3" />
+                <span className="hidden xs:inline">{peekReverse ? 'FRONT' : 'PEEK REVERSE'}</span>
+                <span className="xs:hidden">{peekReverse ? 'FRONT' : 'PEEK'}</span>
               </button>
             )}
 
@@ -589,11 +590,11 @@ export const GameTable: React.FC<GameTableProps> = ({
                   soundFx.speakCaught(caughtTargetPlayer.name);
                   onCatchUno(caughtTargetPlayer.id);
                 }}
-                className="py-1.5 sm:py-2 px-2.5 sm:px-3.5 rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs shadow-md shadow-rose-950 animate-pulse flex items-center gap-1.5 cursor-pointer shrink-0"
+                className="py-1 sm:py-1.5 px-2 sm:px-3 rounded-lg sm:rounded-xl bg-rose-600 hover:bg-rose-500 text-white font-bold text-[10px] sm:text-xs shadow-md shadow-rose-950 animate-pulse flex items-center gap-1 cursor-pointer shrink-0 min-h-[34px] sm:min-h-[38px]"
                 title="Catch opponent who didn't call UNO!"
               >
-                <AlertCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                <span>CATCH {caughtTargetPlayer.name.toUpperCase()}!</span>
+                <AlertCircle className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+                <span>CATCH!</span>
               </button>
             )}
 
@@ -606,21 +607,21 @@ export const GameTable: React.FC<GameTableProps> = ({
                   soundFx.speakUno(localPlayer.name);
                   onCallUno();
                 }}
-                className={`py-1.5 sm:py-2 px-3 sm:px-4 rounded-xl font-heading font-black text-xs sm:text-sm transition-all flex items-center gap-1.5 sm:gap-2 cursor-pointer shadow-xl shrink-0 ${
+                className={`py-1 sm:py-1.5 px-2.5 sm:px-3.5 rounded-lg sm:rounded-xl font-heading font-black text-[11px] sm:text-xs transition-all flex items-center gap-1 sm:gap-1.5 cursor-pointer shadow-lg shrink-0 min-h-[34px] sm:min-h-[38px] ${
                   localPlayer.hasCalledUno
                     ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/60'
-                    : 'bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 hover:from-red-500 hover:to-amber-400 text-white animate-bounce shadow-red-950/80 ring-4 ring-yellow-400/80 scale-105'
+                    : 'bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 hover:from-red-500 hover:to-amber-400 text-white animate-bounce shadow-red-950/80 ring-3 ring-yellow-400 scale-102'
                 }`}
                 title="Press to call UNO!"
               >
-                <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 fill-current animate-spin" />
-                <span>{localPlayer.hasCalledUno ? '✓ UNO CALLED!' : '🚨 CALL UNO! (1 CARD) 🚨'}</span>
+                <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 fill-current animate-spin" />
+                <span>{localPlayer.hasCalledUno ? '✓ UNO CALLED!' : '🚨 CALL UNO!'}</span>
               </button>
             ) : (
               <button
                 type="button"
                 disabled
-                className="hidden md:flex py-1.5 sm:py-2 px-3 rounded-xl font-heading font-semibold text-xs bg-slate-900/60 text-slate-600 border border-slate-800/80 items-center gap-1.5 cursor-not-allowed opacity-50 shrink-0"
+                className="hidden md:flex py-1 sm:py-1.5 px-2.5 rounded-lg font-heading font-semibold text-[10px] bg-slate-900/60 text-slate-600 border border-slate-800/80 items-center gap-1 cursor-not-allowed opacity-50 shrink-0"
                 title="CALL UNO unlocks when only 1 card remains"
               >
                 <span>CALL UNO (1 CARD LEFT)</span>
@@ -634,16 +635,16 @@ export const GameTable: React.FC<GameTableProps> = ({
                 onClick={() => {
                   onDrawCard();
                 }}
-                className="py-1.5 sm:py-2 px-3 sm:px-4 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-xs shadow-md shadow-sky-950/50 cursor-pointer shrink-0"
+                className="py-1 sm:py-1.5 px-2.5 sm:px-3 rounded-lg sm:rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-white font-bold text-[10px] sm:text-xs shadow-md shadow-sky-950/50 cursor-pointer shrink-0 min-h-[34px] sm:min-h-[38px]"
               >
-                DRAW CARD
+                DRAW
               </button>
             )}
           </div>
         </div>
 
-        {/* Scrollable Player Hand */}
-        <div className="w-full max-w-5xl mx-auto overflow-x-auto pb-2 pt-1 flex items-end justify-start sm:justify-center -space-x-1 sm:space-x-2 px-2 sm:px-4 scrollbar-thin">
+        {/* Scrollable Player Hand with Snug Overlap on Phones */}
+        <div className="w-full max-w-5xl mx-auto overflow-x-auto pb-1 pt-0.5 flex items-end justify-start sm:justify-center -space-x-4 sm:-space-x-2 md:space-x-1 px-3 sm:px-6 scrollbar-thin">
           {localPlayer.hand.map((card) => {
             const playable =
               isMyTurn &&
@@ -653,13 +654,16 @@ export const GameTable: React.FC<GameTableProps> = ({
                 topDiscard,
                 pendingDrawPenalty,
                 rules.stacking,
-                currentSide
+                currentSide,
+                localPlayer.hand
               );
 
             return (
               <div
                 key={card.id}
-                className="shrink-0 transition-transform duration-150 hover:z-30 hover:-translate-y-3 sm:hover:-translate-y-4"
+                className={`shrink-0 transition-all duration-150 hover:z-30 hover:-translate-y-3 sm:hover:-translate-y-4 hover:scale-105 active:scale-95 ${
+                  playable ? '-translate-y-1 sm:-translate-y-1.5 z-10' : ''
+                }`}
               >
                 <ModernCard
                   card={card}
@@ -674,7 +678,7 @@ export const GameTable: React.FC<GameTableProps> = ({
           })}
 
           {localPlayer.hand.length === 0 && (
-            <div className="font-heading font-bold text-sm text-amber-400 py-6 animate-pulse">
+            <div className="font-heading font-bold text-xs sm:text-sm text-amber-400 py-4 animate-pulse">
               No cards left! Round won!
             </div>
           )}

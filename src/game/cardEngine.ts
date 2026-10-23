@@ -136,6 +136,21 @@ export const createFlipDeck = (): Card[] => {
     const lightColor = lightColors[cIdx];
     const darkColor = darkColors[cIdx];
 
+    // Numbers 0 (one per color)
+    cards.push({
+      id: `flip_${idCounter++}`,
+      color: lightColor,
+      type: '0',
+      value: 0,
+      score: 0,
+      darkFace: {
+        color: darkColor,
+        type: '0',
+        value: 0,
+        score: 0,
+      },
+    });
+
     // Numbers 1-9 paired with dark side numbers 1-9 (two of each)
     for (let num = 1; num <= 9; num++) {
       const typeStr = num.toString() as CardType;
@@ -319,7 +334,8 @@ export const isCardPlayable = (
   topDiscardCard: Card | null,
   pendingDrawPenalty: number,
   stackingRule: boolean,
-  side: 'light' | 'dark' = 'light'
+  side: 'light' | 'dark' = 'light',
+  playerHand?: Card[]
 ): boolean => {
   const cardFace = getActiveCardFace(card, side);
   if (!topDiscardCard) return true;
@@ -340,12 +356,27 @@ export const isCardPlayable = (
     return false;
   }
 
+  // Wild Draw Two (+2) legality rule: Can only be played if you have NO matching colors in hand
+  if (cardFace.type === 'wild2') {
+    if (playerHand && playerHand.length > 0) {
+      const hasMatchingColor = playerHand.some((c) => {
+        if (c.id === card.id) return false;
+        const f = getActiveCardFace(c, side);
+        if (f.color === 'wild' || f.color === 'dark_wild') return false;
+        return f.color === activeColor;
+      });
+      if (hasMatchingColor) {
+        return false; // Prohibited: player holds active color card
+      }
+    }
+    return true;
+  }
+
   // Wild cards can always be played
   if (
     cardFace.color === 'wild' ||
     cardFace.color === 'dark_wild' ||
     cardFace.type === 'wild' ||
-    cardFace.type === 'wild2' ||
     cardFace.type === 'wild4' ||
     cardFace.type === 'wild_color' ||
     cardFace.type === 'draw10'
