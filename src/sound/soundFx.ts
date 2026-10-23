@@ -526,7 +526,48 @@ class ModernAudioEngine {
     });
   }
 
-  // --- SPOKEN VOICE EFFECTS (WEB SPEECH API) ---
+  private cachedFemaleVoice: SpeechSynthesisVoice | null = null;
+
+  public refreshVoices() {
+    this.cachedFemaleVoice = null;
+    this.findFemaleVoice();
+  }
+
+  private findFemaleVoice(): SpeechSynthesisVoice | null {
+    if (this.cachedFemaleVoice) return this.cachedFemaleVoice;
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return null;
+
+    const voices = window.speechSynthesis.getVoices();
+    if (!voices || voices.length === 0) return null;
+
+    // Prioritized female voice keywords across iOS, Android, Windows, Mac, and Linux
+    const femaleKeywords = [
+      'female', 'samantha', 'zira', 'victoria', 'karen', 'jenny', 'aria',
+      'eva', 'allison', 'fiona', 'susan', 'catherine', 'hazel', 'serena',
+      'ava', 'moira', 'tessa', 'veena', 'google us english', 'en-us'
+    ];
+
+    for (const kw of femaleKeywords) {
+      const match = voices.find(
+        (v) => (v.lang.startsWith('en') || v.lang.startsWith('en_')) && v.name.toLowerCase().includes(kw)
+      );
+      if (match) {
+        this.cachedFemaleVoice = match;
+        return match;
+      }
+    }
+
+    // Fallback to any English voice
+    const anyEn = voices.find((v) => v.lang.startsWith('en'));
+    if (anyEn) {
+      this.cachedFemaleVoice = anyEn;
+      return anyEn;
+    }
+
+    return voices[0] || null;
+  }
+
+  // --- SPOKEN VOICE EFFECTS (FEMALE HUD ANNOUNCER) ---
 
   /** General Speech synthesizer */
   public speak(text: string, force: boolean = false) {
@@ -536,15 +577,13 @@ class ModernAudioEngine {
     try {
       window.speechSynthesis.cancel(); // Stop any pending speech
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1.1; // energetic
-      utterance.pitch = 1.05;
-      utterance.volume = 0.85;
+      utterance.rate = 1.05; // clear energetic cadence
+      utterance.pitch = 1.2;  // tuned for female HUD voice
+      utterance.volume = 0.95;
 
-      // Select an English voice if available
-      const voices = window.speechSynthesis.getVoices();
-      const enVoice = voices.find((v) => v.lang.startsWith('en'));
-      if (enVoice) {
-        utterance.voice = enVoice;
+      const voice = this.findFemaleVoice();
+      if (voice) {
+        utterance.voice = voice;
       }
 
       window.speechSynthesis.speak(utterance);
@@ -601,4 +640,10 @@ if (typeof window !== 'undefined') {
   window.addEventListener('pointerdown', unlockAudio, { passive: true });
   window.addEventListener('keydown', unlockAudio, { passive: true });
   window.addEventListener('touchstart', unlockAudio, { passive: true });
+
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.onvoiceschanged = () => {
+      soundFx.refreshVoices();
+    };
+  }
 }

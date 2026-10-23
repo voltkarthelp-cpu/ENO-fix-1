@@ -23,36 +23,36 @@ export const ModernCard: React.FC<ModernCardProps> = ({
 }) => {
   const sizeStyles = {
     xs: {
-      w: 'w-10 sm:w-11',
-      h: 'h-14 sm:h-16',
-      corner: 'text-[11px] p-1',
-      center: 'text-sm',
-      iconSize: 'w-3.5 h-3.5',
-      rounded: 'rounded-lg',
+      w: 'w-8 sm:w-10',
+      h: 'h-12 sm:h-14',
+      corner: 'text-[9px] p-0.5',
+      center: 'text-xs',
+      iconSize: 'w-3 h-3',
+      rounded: 'rounded-md',
     },
     sm: {
-      w: 'w-14 sm:w-16',
-      h: 'h-20 sm:h-24',
-      corner: 'text-xs p-1.5',
-      center: 'text-xl',
-      iconSize: 'w-5 h-5',
-      rounded: 'rounded-xl',
+      w: 'w-12 sm:w-16',
+      h: 'h-18 sm:h-24',
+      corner: 'text-[10px] sm:text-xs p-1',
+      center: 'text-lg sm:text-xl',
+      iconSize: 'w-4 h-4 sm:w-5 sm:h-5',
+      rounded: 'rounded-lg sm:rounded-xl',
     },
     md: {
-      w: 'w-20 sm:w-24',
-      h: 'h-28 sm:h-34',
-      corner: 'text-sm p-2',
-      center: 'text-3xl',
-      iconSize: 'w-8 h-8',
-      rounded: 'rounded-2xl',
+      w: 'w-16 sm:w-20 md:w-24',
+      h: 'h-24 sm:h-30 md:h-36',
+      corner: 'text-xs sm:text-sm p-1 sm:p-1.5',
+      center: 'text-2xl sm:text-3xl',
+      iconSize: 'w-6 h-6 sm:w-8 sm:h-8',
+      rounded: 'rounded-xl sm:rounded-2xl',
     },
     lg: {
-      w: 'w-24 sm:w-28 md:w-32',
-      h: 'h-36 sm:h-42 md:h-48',
-      corner: 'text-base p-2.5',
-      center: 'text-4xl sm:text-5xl',
-      iconSize: 'w-10 h-10',
-      rounded: 'rounded-2xl',
+      w: 'w-16 sm:w-20 md:w-26 lg:w-28',
+      h: 'h-24 sm:h-30 md:h-38 lg:h-42',
+      corner: 'text-xs sm:text-sm md:text-base p-1 sm:p-1.5 md:p-2',
+      center: 'text-2xl sm:text-3xl md:text-4xl lg:text-5xl',
+      iconSize: 'w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10',
+      rounded: 'rounded-xl sm:rounded-2xl',
     },
   };
 
@@ -210,7 +210,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({
       } ${isSelected ? '-translate-y-4 ring-4 ring-white shadow-2xl' : ''} ${className}`}
     >
       {/* Center Ellipse Capsule (rendered under the corners) */}
-      <div className="absolute inset-2 sm:inset-3 rounded-xl bg-white/15 backdrop-blur-xs border border-white/25 flex items-center justify-center shadow-inner z-0">
+      <div className="absolute inset-1.5 sm:inset-2.5 rounded-lg sm:rounded-xl bg-white/15 backdrop-blur-xs border border-white/25 flex items-center justify-center shadow-inner z-0">
         <div className={style.text}>
           {renderCenterGraphic()}
         </div>
