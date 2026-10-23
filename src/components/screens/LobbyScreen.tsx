@@ -221,14 +221,25 @@ export const LobbyScreen: React.FC<LobbyScreenProps> = ({
         {/* Center / Right Columns: Connected Players & Controls */}
         <div className="md:col-span-2 bg-slate-900/90 border border-slate-800 rounded-2xl p-6 shadow-xl backdrop-blur-md flex flex-col justify-between gap-5">
           <div>
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-              <h2 className="font-heading font-bold text-lg text-white flex items-center gap-2">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4 flex-wrap gap-2">
+              <h2 className="font-heading font-bold text-base sm:text-lg text-white flex items-center gap-2">
                 <Users className="w-5 h-5 text-sky-400" />
-                <span>Connected Human Players ({players.length}/{rules.playerLimit})</span>
+                <span>Connected Players ({players.length}/{rules.playerLimit})</span>
               </h2>
-              <span className="text-xs text-slate-400 font-medium">
-                Max {rules.playerLimit} Players
-              </span>
+              <div className="flex items-center gap-2">
+                <span className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full border ${
+                  rules.deckEdition === 'flip'
+                    ? 'bg-pink-950/70 text-pink-300 border-pink-500/60'
+                    : rules.deckEdition === 'no_mercy'
+                    ? 'bg-red-950/70 text-red-300 border-red-500/60'
+                    : 'bg-blue-950/70 text-sky-300 border-sky-500/60'
+                }`}>
+                  {rules.deckEdition === 'flip' ? 'UNO FLIP! (DOUBLE-SIDED)' : rules.deckEdition === 'no_mercy' ? 'UNO NO MERCY' : 'CLASSIC UNO'}
+                </span>
+                <span className="text-xs text-slate-400 font-medium hidden sm:inline">
+                  Max {rules.playerLimit}P
+                </span>
+              </div>
             </div>
 
             {/* Players Grid (supporting up to 8 players) */}

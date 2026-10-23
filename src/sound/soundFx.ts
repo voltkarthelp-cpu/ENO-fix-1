@@ -625,6 +625,58 @@ class ModernAudioEngine {
   public speakRoundWin(winnerName: string) {
     this.speak(`${winnerName} wins the round!`);
   }
+
+  public speakFlip(side: 'light' | 'dark') {
+    if (side === 'dark') {
+      this.speak("FLIP! Entering the Dark Side!");
+    } else {
+      this.speak("FLIP! Returning to the Light Side!");
+    }
+  }
+
+  public speakSkipEveryone() {
+    this.speak("Skip everyone! You play again!");
+  }
+
+  public speakNoMercy(count: number) {
+    this.speak(`No Mercy! Draw ${count} cards!`);
+  }
+
+  public speakMercyEliminated(playerName: string) {
+    this.speak(`Mercy rule triggered! ${playerName} is eliminated!`);
+  }
+
+  /** UNO Flip swoosh: Sweeping cosmic warp sound effect */
+  public playFlip() {
+    if (this.sfxMuted) return;
+    this.initContext();
+    if (!this.ctx) return;
+
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    const filter = this.ctx.createBiquadFilter();
+
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(780, now + 0.18);
+    osc.frequency.exponentialRampToValueAtTime(260, now + 0.35);
+
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(800, now);
+    filter.frequency.exponentialRampToValueAtTime(3200, now + 0.18);
+    filter.frequency.exponentialRampToValueAtTime(600, now + 0.35);
+
+    gain.gain.setValueAtTime(this.sfxVolume * 0.7, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(this.ctx.destination);
+
+    osc.start(now);
+    osc.stop(now + 0.4);
+  }
 }
 
 export const soundFx = new ModernAudioEngine();

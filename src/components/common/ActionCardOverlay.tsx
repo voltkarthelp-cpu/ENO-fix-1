@@ -4,14 +4,16 @@ import { CardColor } from '../../types/game';
 
 interface ActionCardOverlayProps {
   lastActionMessage: string;
-  lastActionType?: 'play' | 'draw' | 'skip' | 'reverse' | 'penalty' | 'uno' | 'wild';
+  lastActionType?: 'play' | 'draw' | 'skip' | 'reverse' | 'penalty' | 'uno' | 'wild' | 'flip' | 'mercy';
   activeColor: CardColor;
+  currentSide?: 'light' | 'dark';
 }
 
 export const ActionCardOverlay: React.FC<ActionCardOverlayProps> = ({
   lastActionMessage,
   lastActionType,
   activeColor,
+  currentSide = 'light',
 }) => {
   const [visible, setVisible] = useState(false);
   const [currentAction, setCurrentAction] = useState<string | null>(null);
@@ -23,14 +25,16 @@ export const ActionCardOverlay: React.FC<ActionCardOverlayProps> = ({
       lastActionType === 'reverse' ||
       lastActionType === 'penalty' ||
       lastActionType === 'wild' ||
-      lastActionType === 'uno'
+      lastActionType === 'uno' ||
+      lastActionType === 'flip' ||
+      lastActionType === 'mercy'
     ) {
       setCurrentAction(lastActionType);
       setVisible(true);
 
       const timer = setTimeout(() => {
         setVisible(false);
-      }, 1800);
+      }, 1900);
 
       return () => clearTimeout(timer);
     }
@@ -101,6 +105,32 @@ export const ActionCardOverlay: React.FC<ActionCardOverlayProps> = ({
           </div>
           <div className="bg-red-950/95 border-2 border-yellow-400 text-yellow-300 font-heading font-black text-3xl sm:text-4xl px-8 py-3 rounded-2xl shadow-2xl tracking-widest uppercase animate-bounce">
             🚨 UNO! 🚨
+          </div>
+        </div>
+      )}
+
+      {/* UNO Flip Animation */}
+      {currentAction === 'flip' && (
+        <div className="relative z-10 flex flex-col items-center justify-center text-center animate-in zoom-in-75 duration-300">
+          <div className="w-28 h-28 rounded-full p-1.5 bg-gradient-to-tr from-purple-600 via-pink-500 to-amber-300 shadow-[0_0_80px_rgba(236,72,153,0.9)] mb-3 animate-spin duration-1000">
+            <div className="w-full h-full rounded-full bg-slate-950 border-2 border-white flex items-center justify-center">
+              <span className="font-heading font-black text-3xl text-amber-300 animate-pulse">↻</span>
+            </div>
+          </div>
+          <div className="bg-slate-950/95 border-3 border-pink-400 text-pink-300 font-heading font-black text-2xl sm:text-4xl px-8 py-3 rounded-2xl shadow-2xl tracking-wider uppercase animate-bounce">
+            {currentSide === 'dark' ? '🌌 ENTERING THE DARK SIDE! 🌌' : '☀️ RETURNING TO LIGHT SIDE! ☀️'}
+          </div>
+        </div>
+      )}
+
+      {/* No Mercy Knockout Animation */}
+      {currentAction === 'mercy' && (
+        <div className="relative z-10 flex flex-col items-center justify-center text-center animate-in zoom-in-75 duration-200">
+          <div className="w-24 h-24 rounded-full bg-red-700 border-4 border-yellow-400 shadow-[0_0_80px_rgba(220,38,38,0.9)] flex items-center justify-center mb-3 animate-pulse">
+            <AlertTriangle className="w-14 h-14 text-yellow-300 fill-current" />
+          </div>
+          <div className="bg-red-950/95 border-2 border-yellow-400 text-yellow-200 font-heading font-black text-2xl sm:text-3xl px-8 py-3 rounded-2xl shadow-2xl tracking-wider uppercase">
+            ☠ MERCY RULE KNOCKOUT! ☠
           </div>
         </div>
       )}

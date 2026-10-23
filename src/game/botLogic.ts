@@ -18,9 +18,11 @@ export const decideBotMove = (
   const pendingPenalty = tableState.pendingDrawPenalty;
   const stackingRule = tableState.rules.stacking;
 
+  const currentSide = tableState.currentSide || 'light';
+
   // Filter playable cards
   const playableCards = botPlayer.hand.filter((c) =>
-    isCardPlayable(c, activeColor, topDiscard, pendingPenalty, stackingRule)
+    isCardPlayable(c, activeColor, topDiscard, pendingPenalty, stackingRule, currentSide)
   );
 
   if (playableCards.length === 0) {
@@ -28,23 +30,27 @@ export const decideBotMove = (
   }
 
   // Count colors in hand to pick best Wild color
-  const colorCounts: Record<Exclude<CardColor, 'wild'>, number> = {
-    red: 0,
-    blue: 0,
-    green: 0,
-    yellow: 0,
-  };
+  const isDark = currentSide === 'dark';
+  const availableColors: CardColor[] = isDark
+    ? ['pink', 'teal', 'purple', 'orange']
+    : ['red', 'blue', 'green', 'yellow'];
+
+  const colorCounts: Record<string, number> = {};
+  availableColors.forEach((col) => {
+    colorCounts[col] = 0;
+  });
 
   botPlayer.hand.forEach((c) => {
-    if (c.color !== 'wild') {
-      colorCounts[c.color]++;
+    const face = c.darkFace && isDark ? c.darkFace : c;
+    if (colorCounts[face.color] !== undefined) {
+      colorCounts[face.color]++;
     }
   });
 
-  let bestColor: Exclude<CardColor, 'wild'> = 'red';
+  let bestColor: CardColor = availableColors[0];
   let maxCount = -1;
-  (Object.keys(colorCounts) as Array<Exclude<CardColor, 'wild'>>).forEach((col) => {
-    if (colorCounts[col] > maxCount) {
+  availableColors.forEach((col) => {
+    if ((colorCounts[col] || 0) > maxCount) {
       maxCount = colorCounts[col];
       bestColor = col;
     }

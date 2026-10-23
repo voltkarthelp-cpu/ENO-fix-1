@@ -10,7 +10,9 @@ import { SupabaseSettingsModal } from './components/screens/SupabaseSettingsModa
 import { AvatarId, Card, CardColor, GameMode, GamePhase, GameRules, GameTableState, Player } from './types/game';
 import {
   calculateRoundScore,
+  getActiveCardFace,
   getNextPlayerIndex,
+  getReverseCardFace,
   isCardPlayable,
   replenishDrawPile,
   startNewRound,
@@ -57,6 +59,7 @@ export default function App() {
 
   // Default game rules: Up to 8 players, bot-free
   const [rules, setRules] = useState<GameRules>({
+    deckEdition: 'flip',
     playerLimit: 8,
     startingHandSize: 7,
     targetScore: 250,
@@ -64,6 +67,8 @@ export default function App() {
     drawUntilPlayable: false,
     unoPenaltyCards: 2,
     turnTimeoutSeconds: 0,
+    mercyRule: false,
+    sevenZeroRule: false,
   });
 
   // Authoritative full deck (kept by host or local session)
@@ -78,6 +83,7 @@ export default function App() {
       phase: initialRoomFromUrl ? 'JOIN' : 'TITLE',
       mode: 'multiplayer',
       rules: {
+        deckEdition: 'flip',
         playerLimit: 8,
         startingHandSize: 7,
         targetScore: 250,
@@ -85,6 +91,8 @@ export default function App() {
         drawUntilPlayable: false,
         unoPenaltyCards: 2,
         turnTimeoutSeconds: 0,
+        mercyRule: false,
+        sevenZeroRule: false,
       },
       players: [],
       currentPlayerIndex: 0,
@@ -94,11 +102,13 @@ export default function App() {
       activeColor: 'red',
       pendingDrawPenalty: 0,
       unoCallPendingPlayerId: null,
-      lastActionMessage: 'Welcome to Card Clash!',
+      lastActionMessage: 'Welcome to Card Clash: UNO Flip Edition!',
       roundNumber: 0,
       roundWinnerId: null,
       matchWinnerId: null,
       turnStartTime: Date.now(),
+      currentSide: 'light',
+      eliminatedPlayerIds: [],
     };
   });
 
@@ -154,14 +164,22 @@ export default function App() {
       const card = player.hand.find((c) => c.id === cardId);
       if (!card) return;
 
+      const currentSide = prev.currentSide || 'light';
+      const cardFace = getActiveCardFace(card, currentSide);
       const topDiscard = prev.discardPile[prev.discardPile.length - 1] || null;
-      if (!isCardPlayable(card, prev.activeColor, topDiscard, prev.pendingDrawPenalty, prev.rules.stacking)) {
+
+      if (!isCardPlayable(card, prev.activeColor, topDiscard, prev.pendingDrawPenalty, prev.rules.stacking, currentSide)) {
         console.warn(`[Fairness Guard] Illegal card play rejected:`, card);
         return;
       }
 
       // Remove played card from hand
-      const newHand = player.hand.filter((c) => c.id !== cardId);
+      let newHand = player.hand.filter((c) => c.id !== cardId);
+
+      // Special action: Discard All of Color (No Mercy)
+      if (cardFace.type === 'discard_all') {
+        newHand = newHand.filter((c) => getActiveCardFace(c, currentSide).color !== cardFace.color);
+      }
 
       // Check Uno status
       let hasCalledUno = player.hasCalledUno;
@@ -225,13 +243,28 @@ export default function App() {
       // Audio feedback
       if (calledUno) {
         soundFx.playUnoCall();
-      } else if (card.type === 'wild' || card.type === 'wild4') {
+      } else if (cardFace.type === 'flip') {
+        soundFx.playFlip();
+      } else if (
+        cardFace.color === 'wild' ||
+        cardFace.color === 'dark_wild' ||
+        cardFace.type === 'wild' ||
+        cardFace.type === 'wild2' ||
+        cardFace.type === 'wild4' ||
+        cardFace.type === 'wild_color'
+      ) {
         soundFx.playWild();
-      } else if (card.type === 'draw2') {
+      } else if (
+        cardFace.type === 'draw1' ||
+        cardFace.type === 'draw2' ||
+        cardFace.type === 'draw5' ||
+        cardFace.type === 'draw6' ||
+        cardFace.type === 'draw10'
+      ) {
         soundFx.playDrawPenalty();
-      } else if (card.type === 'skip') {
+      } else if (cardFace.type === 'skip' || cardFace.type === 'skip_everyone') {
         soundFx.playSkip();
-      } else if (card.type === 'reverse') {
+      } else if (cardFace.type === 'reverse') {
         soundFx.playReverse();
       } else {
         soundFx.playCardPlay();
@@ -240,16 +273,42 @@ export default function App() {
       // Handle card effects and rotation
       let newDirection = prev.direction;
       let nextStep = 1;
-      let newActiveColor: CardColor = card.color === 'wild' && chosenColor ? chosenColor : card.color;
+      let newSide: 'light' | 'dark' = currentSide;
+      let newActiveColor: CardColor =
+        (cardFace.color === 'wild' || cardFace.color === 'dark_wild') && chosenColor
+          ? chosenColor
+          : cardFace.color;
       let pendingPenalty = prev.pendingDrawPenalty;
       let actionType: GameTableState['lastActionType'] = 'play';
-      let actionMsg = `${player.name} played ${card.color.toUpperCase()} ${card.type.toUpperCase()}`;
+      let actionMsg = `${player.name} played ${cardFace.color.toUpperCase()} ${cardFace.type.toUpperCase()}`;
 
-      if (card.type === 'skip') {
+      // 1. FLIP Card (UNO Flip!)
+      if (cardFace.type === 'flip') {
+        newSide = currentSide === 'light' ? 'dark' : 'light';
+        soundFx.speakFlip(newSide);
+        actionType = 'flip';
+        const reverseFace = getActiveCardFace(card, newSide);
+        newActiveColor =
+          reverseFace.color === 'wild' || reverseFace.color === 'dark_wild'
+            ? (chosenColor || (newSide === 'dark' ? 'pink' : 'red'))
+            : reverseFace.color;
+        actionMsg = `↻ ${player.name} played FLIP! Entering the ${newSide === 'dark' ? 'DARK SIDE 🌌' : 'LIGHT SIDE ☀️'}!`;
+      }
+      // 2. Skip Everyone (UNO Flip Dark Side & No Mercy)
+      else if (cardFace.type === 'skip_everyone') {
+        nextStep = 0; // Current player plays again immediately!
+        actionType = 'skip';
+        soundFx.speakSkipEveryone();
+        actionMsg = `⊗ ${player.name} played SKIP EVERYONE! All opponents skipped, ${player.name} plays again!`;
+      }
+      // 3. Skip
+      else if (cardFace.type === 'skip') {
         nextStep = 2;
         actionType = 'skip';
         actionMsg = `⊘ ${player.name} played Skip! Next player skipped.`;
-      } else if (card.type === 'reverse') {
+      }
+      // 4. Reverse
+      else if (cardFace.type === 'reverse') {
         actionType = 'reverse';
         if (prev.players.length === 2) {
           nextStep = 2; // Acts as Skip in 2-player UNO
@@ -259,45 +318,64 @@ export default function App() {
           nextStep = 1;
           actionMsg = `⇄ ${player.name} reversed play order!`;
         }
-      } else if (card.type === 'draw2') {
+      }
+      // 5. Draw 1 (UNO Flip Light Side)
+      else if (cardFace.type === 'draw1') {
         actionType = 'penalty';
-        if (prev.rules.stacking) {
+        pendingPenalty += 1;
+        actionMsg = `+1 ${player.name} played Draw One! (Stack: +${pendingPenalty})`;
+      }
+      // 6. Draw 2
+      else if (cardFace.type === 'draw2') {
+        actionType = 'penalty';
+        pendingPenalty += 2;
+        actionMsg = `+2 ${player.name} played Draw Two! (Stack: +${pendingPenalty})`;
+      }
+      // 7. Draw 5 (UNO Flip Dark Side)
+      else if (cardFace.type === 'draw5') {
+        actionType = 'penalty';
+        pendingPenalty += 5;
+        actionMsg = `+5 ${player.name} unleashed Dark Draw Five! (Stack: +${pendingPenalty})`;
+      }
+      // 8. Draw 6 (No Mercy)
+      else if (cardFace.type === 'draw6') {
+        actionType = 'penalty';
+        pendingPenalty += 6;
+        actionMsg = `+6 ${player.name} played Draw Six! (Stack: +${pendingPenalty})`;
+      }
+      // 9. Draw 10 (No Mercy)
+      else if (cardFace.type === 'draw10') {
+        actionType = 'penalty';
+        pendingPenalty += 10;
+        newActiveColor = chosenColor || 'red';
+        actionMsg = `☠+10 ${player.name} unleashed WILD DRAW 10! (Stack: +${pendingPenalty})`;
+      }
+      // 10. Wild / Wild 2 / Wild 4 / Wild Color
+      else if (
+        cardFace.type === 'wild' ||
+        cardFace.type === 'wild2' ||
+        cardFace.type === 'wild4' ||
+        cardFace.type === 'wild_color'
+      ) {
+        actionType = 'wild';
+        newActiveColor = chosenColor || (currentSide === 'dark' ? 'pink' : 'red');
+        if (cardFace.type === 'wild2') {
           pendingPenalty += 2;
-          nextStep = 1;
-          actionMsg = `+2 ${player.name} played Draw Two! (Stack: +${pendingPenalty})`;
-        } else {
-          const victimIndex = getNextPlayerIndex(prev.currentPlayerIndex, newDirection, 1, prev.players.length);
-          const victim = updatedPlayers[victimIndex];
-          const { drawn: cardsDrawn } = drawCardsFromDeck(2);
-          updatedPlayers[victimIndex] = {
-            ...victim,
-            hand: [...victim.hand, ...cardsDrawn],
-            handCount: victim.hand.length + cardsDrawn.length,
-          };
-          nextStep = 2;
-          actionMsg = `+2 ${player.name} hit ${victim.name} with +2 cards!`;
-        }
-      } else if (card.type === 'wild') {
-        actionType = 'wild';
-        actionMsg = `★ ${player.name} changed color to ${newActiveColor.toUpperCase()}!`;
-      } else if (card.type === 'wild4') {
-        actionType = 'wild';
-        if (prev.rules.stacking) {
+          actionMsg = `★+2 ${player.name} played Wild Draw 2 to ${newActiveColor.toUpperCase()}! (Stack: +${pendingPenalty})`;
+        } else if (cardFace.type === 'wild4') {
           pendingPenalty += 4;
-          nextStep = 1;
-          actionMsg = `★+4 ${player.name} played Wild +4 to ${newActiveColor.toUpperCase()}! (Stack: +${pendingPenalty})`;
+          actionMsg = `★+4 ${player.name} played Wild Draw 4 to ${newActiveColor.toUpperCase()}! (Stack: +${pendingPenalty})`;
+        } else if (cardFace.type === 'wild_color') {
+          pendingPenalty += 4;
+          actionMsg = `❖ ${player.name} played Wild Draw Color to ${newActiveColor.toUpperCase()}! (Stack: +${pendingPenalty})`;
         } else {
-          const victimIndex = getNextPlayerIndex(prev.currentPlayerIndex, newDirection, 1, prev.players.length);
-          const victim = updatedPlayers[victimIndex];
-          const { drawn: cardsDrawn } = drawCardsFromDeck(4);
-          updatedPlayers[victimIndex] = {
-            ...victim,
-            hand: [...victim.hand, ...cardsDrawn],
-            handCount: victim.hand.length + cardsDrawn.length,
-          };
-          nextStep = 2;
-          actionMsg = `★+4 ${player.name} played Wild +4! ${victim.name} draws 4 and is skipped!`;
+          actionMsg = `★ ${player.name} changed color to ${newActiveColor.toUpperCase()}!`;
         }
+      }
+      // 11. Discard All (No Mercy)
+      else if (cardFace.type === 'discard_all') {
+        actionType = 'play';
+        actionMsg = `⇊ ${player.name} played Discard All ${cardFace.color.toUpperCase()}!`;
       }
 
       if (calledUno) {
@@ -305,11 +383,24 @@ export default function App() {
         actionType = 'uno';
       }
 
+      // Check Mercy Knockout for player if hands >= 25
+      let eliminatedIds = [...(prev.eliminatedPlayerIds || [])];
+      if (prev.rules.mercyRule && updatedPlayer.hand.length >= 25) {
+        updatedPlayer.isEliminated = true;
+        if (!eliminatedIds.includes(player.id)) {
+          eliminatedIds.push(player.id);
+        }
+        soundFx.speakMercyEliminated(player.name);
+        actionMsg += ` ☠ MERCY RULE: ${player.name} holds ${updatedPlayer.hand.length} cards and is eliminated!`;
+      }
+
       const nextPlayerIndex = getNextPlayerIndex(
         prev.currentPlayerIndex,
         newDirection,
         nextStep,
-        prev.players.length
+        prev.players.length,
+        eliminatedIds,
+        updatedPlayers
       );
 
       const nextTableState: GameTableState = {
@@ -324,6 +415,8 @@ export default function App() {
         lastActionMessage: actionMsg,
         lastActionType: actionType,
         turnStartTime: Date.now(),
+        currentSide: newSide,
+        eliminatedPlayerIds: eliminatedIds,
       };
 
       // Pass & Play handoff
@@ -378,12 +471,31 @@ export default function App() {
       const updatedPlayers = [...prev.players];
       updatedPlayers[playerIndex] = updatedPlayer;
 
-      const nextIndex = getNextPlayerIndex(prev.currentPlayerIndex, prev.direction, 1, prev.players.length);
-
-      const actionMsg =
+      let actionMsg =
         prev.pendingDrawPenalty > 0
           ? `${player.name} drew +${prev.pendingDrawPenalty} stacked cards!`
           : `${player.name} drew a card.`;
+      let actionType: GameTableState['lastActionType'] = 'draw';
+
+      let eliminatedIds = [...(prev.eliminatedPlayerIds || [])];
+      if (prev.rules.mercyRule && updatedPlayer.hand.length >= 25 && !updatedPlayer.isEliminated) {
+        updatedPlayer.isEliminated = true;
+        if (!eliminatedIds.includes(player.id)) {
+          eliminatedIds.push(player.id);
+        }
+        soundFx.speakMercyEliminated(player.name);
+        actionMsg += ` ☠ MERCY RULE: ${player.name} holds ${updatedPlayer.hand.length} cards and is eliminated!`;
+        actionType = 'mercy';
+      }
+
+      const nextIndex = getNextPlayerIndex(
+        prev.currentPlayerIndex,
+        prev.direction,
+        1,
+        prev.players.length,
+        eliminatedIds,
+        updatedPlayers
+      );
 
       const nextTableState: GameTableState = {
         ...prev,
@@ -394,8 +506,10 @@ export default function App() {
         pendingDrawPenalty: 0,
         unoCallPendingPlayerId: null, // Window to catch previous player has closed
         lastActionMessage: actionMsg,
-        lastActionType: 'draw',
+        lastActionType: actionType,
         turnStartTime: Date.now(),
+        currentSide: prev.currentSide || 'light',
+        eliminatedPlayerIds: eliminatedIds,
       };
 
       if (prev.mode === 'pass_and_play') {
