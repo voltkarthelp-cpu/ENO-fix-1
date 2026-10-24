@@ -24,6 +24,28 @@
   .card-gradient-sheen {
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0.05) 40%, rgba(0, 0, 0, 0.15) 100%);
   }
+
+  /* 3D Flat Table Cards on Felt */
+  .poker-table-perspective {
+    perspective: 900px;
+    perspective-origin: center 60%;
+  }
+  .card-flat-deck {
+    transform: rotateX(36deg) rotateZ(-3deg);
+    transform-style: preserve-3d;
+    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .card-flat-deck:hover {
+    transform: rotateX(30deg) rotateZ(-2deg) translateY(-8px);
+  }
+  .card-flat-discard {
+    transform: rotateX(36deg) rotateZ(5deg);
+    transform-style: preserve-3d;
+    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .felt-contact-shadow {
+    box-shadow: 0 20px 28px -4px rgba(0, 0, 0, 0.85), 0 8px 14px -2px rgba(0, 0, 0, 0.65);
+  }
 }
 
 /* Custom sleek dark scrollbar */

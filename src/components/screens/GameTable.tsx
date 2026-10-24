@@ -32,54 +32,54 @@ import { soundFx } from '../../sound/soundFx';
 
 const getSeatPositionClass = (seatIndex: number, totalPlayers: number): string => {
   // seatIndex 0 is Local Player (rendered in bottom hand toolbar).
-  // seatIndex 1..totalPlayers-1 are opponents positioned clockwise around the oval poker table.
+  // seatIndex 1..totalPlayers-1 are opponents positioned clockwise along the wooden rim of the poker table.
   if (totalPlayers === 2) {
-    return 'top-1 sm:top-3 left-1/2 -translate-x-1/2';
+    return 'top-[2%] sm:top-[4%] left-1/2 -translate-x-1/2';
   }
 
   if (totalPlayers === 3) {
-    if (seatIndex === 1) return 'top-3 sm:top-6 right-[8%] sm:right-[14%]';
-    return 'top-3 sm:top-6 left-[8%] sm:left-[14%]';
+    if (seatIndex === 1) return 'top-[5%] sm:top-[7%] right-[8%] sm:right-[16%]';
+    return 'top-[5%] sm:top-[7%] left-[8%] sm:left-[16%]';
   }
 
   if (totalPlayers === 4) {
-    if (seatIndex === 1) return 'top-1/2 left-0.5 sm:left-2 -translate-y-1/2';
-    if (seatIndex === 2) return 'top-1 sm:top-3 left-1/2 -translate-x-1/2';
-    return 'top-1/2 right-0.5 sm:right-2 -translate-y-1/2';
+    if (seatIndex === 1) return 'top-1/2 left-[1%] sm:left-[3%] -translate-y-1/2';
+    if (seatIndex === 2) return 'top-[2%] sm:top-[4%] left-1/2 -translate-x-1/2';
+    return 'top-1/2 right-[1%] sm:right-[3%] -translate-y-1/2';
   }
 
   if (totalPlayers === 5) {
-    if (seatIndex === 1) return 'bottom-6 sm:bottom-10 left-0.5 sm:left-2';
-    if (seatIndex === 2) return 'top-1 sm:top-3 left-[12%] sm:left-[16%]';
-    if (seatIndex === 3) return 'top-1 sm:top-3 right-[12%] sm:right-[16%]';
-    return 'bottom-6 sm:bottom-10 right-0.5 sm:right-2';
+    if (seatIndex === 1) return 'bottom-[10%] sm:bottom-[15%] left-[1%] sm:left-[3%]';
+    if (seatIndex === 2) return 'top-[3%] sm:top-[5%] left-[12%] sm:left-[18%]';
+    if (seatIndex === 3) return 'top-[3%] sm:top-[5%] right-[12%] sm:right-[18%]';
+    return 'bottom-[10%] sm:bottom-[15%] right-[1%] sm:right-[3%]';
   }
 
   if (totalPlayers === 6) {
-    if (seatIndex === 1) return 'bottom-6 sm:bottom-10 left-0.5 sm:left-2';
-    if (seatIndex === 2) return 'top-3 sm:top-5 left-[10%] sm:left-[14%]';
-    if (seatIndex === 3) return 'top-1 sm:top-2 left-1/2 -translate-x-1/2';
-    if (seatIndex === 4) return 'top-3 sm:top-5 right-[10%] sm:right-[14%]';
-    return 'bottom-6 sm:bottom-10 right-0.5 sm:right-2';
+    if (seatIndex === 1) return 'bottom-[10%] sm:bottom-[15%] left-[1%] sm:left-[3%]';
+    if (seatIndex === 2) return 'top-[4%] sm:top-[6%] left-[10%] sm:left-[15%]';
+    if (seatIndex === 3) return 'top-[1%] sm:top-[3%] left-1/2 -translate-x-1/2';
+    if (seatIndex === 4) return 'top-[4%] sm:top-[6%] right-[10%] sm:right-[15%]';
+    return 'bottom-[10%] sm:bottom-[15%] right-[1%] sm:right-[3%]';
   }
 
   if (totalPlayers === 7) {
-    if (seatIndex === 1) return 'bottom-5 sm:bottom-8 left-0.5 sm:left-1';
-    if (seatIndex === 2) return 'top-[36%] left-0 sm:left-1 -translate-y-1/2';
-    if (seatIndex === 3) return 'top-1 sm:top-3 left-[16%] sm:left-[20%]';
-    if (seatIndex === 4) return 'top-1 sm:top-3 right-[16%] sm:right-[20%]';
-    if (seatIndex === 5) return 'top-[36%] right-0 sm:right-1 -translate-y-1/2';
-    return 'bottom-5 sm:bottom-8 right-0.5 sm:right-1';
+    if (seatIndex === 1) return 'bottom-[9%] sm:bottom-[13%] left-[1%]';
+    if (seatIndex === 2) return 'top-[40%] left-[0.5%] sm:left-[1.5%] -translate-y-1/2';
+    if (seatIndex === 3) return 'top-[2%] sm:top-[4%] left-[14%] sm:left-[20%]';
+    if (seatIndex === 4) return 'top-[2%] sm:top-[4%] right-[14%] sm:right-[20%]';
+    if (seatIndex === 5) return 'top-[40%] right-[0.5%] sm:right-[1.5%] -translate-y-1/2';
+    return 'bottom-[9%] sm:bottom-[13%] right-[1%]';
   }
 
   // 8 players
-  if (seatIndex === 1) return 'bottom-5 sm:bottom-8 left-0.5 sm:left-1';
-  if (seatIndex === 2) return 'top-[36%] left-0 sm:left-1 -translate-y-1/2';
-  if (seatIndex === 3) return 'top-1 sm:top-3 left-[14%] sm:left-[18%]';
-  if (seatIndex === 4) return 'top-0.5 sm:top-2 left-1/2 -translate-x-1/2';
-  if (seatIndex === 5) return 'top-1 sm:top-3 right-[14%] sm:right-[18%]';
-  if (seatIndex === 6) return 'top-[36%] right-0 sm:right-1 -translate-y-1/2';
-  return 'bottom-5 sm:bottom-8 right-0.5 sm:right-1';
+  if (seatIndex === 1) return 'bottom-[9%] sm:bottom-[13%] left-[1%]';
+  if (seatIndex === 2) return 'top-[40%] left-[0.5%] sm:left-[1.5%] -translate-y-1/2';
+  if (seatIndex === 3) return 'top-[2%] sm:top-[4%] left-[12%] sm:left-[16%]';
+  if (seatIndex === 4) return 'top-[0.5%] sm:top-[2%] left-1/2 -translate-x-1/2';
+  if (seatIndex === 5) return 'top-[2%] sm:top-[4%] right-[12%] sm:right-[16%]';
+  if (seatIndex === 6) return 'top-[40%] right-[0.5%] sm:right-[1.5%] -translate-y-1/2';
+  return 'bottom-[9%] sm:bottom-[13%] right-[1%]';
 };
 
 interface GameTableProps {
@@ -427,19 +427,19 @@ export const GameTable: React.FC<GameTableProps> = ({
 
       {/* Poker Table Arena with 2-8 Seated Opponents Layout */}
       <main className="relative z-10 flex-1 min-h-0 w-full max-w-5xl mx-auto px-1 sm:px-3 flex flex-col items-center justify-center overflow-hidden my-auto select-none">
-        <div className="relative w-full h-full max-h-[350px] xs:max-h-[380px] sm:max-h-[440px] md:max-h-[490px] flex items-center justify-center">
-          {/* Uploaded Green Felt Poker Table Image blended in background */}
+        <div className="relative w-full aspect-[2/1] max-h-[360px] xs:max-h-[400px] sm:max-h-[460px] md:max-h-[520px] flex items-center justify-center">
+          {/* Uploaded Photorealistic Green Felt Poker Table Image blended as playground */}
           <img
-            src="/assets/aistudio/Minimalist_Green_Felt_Poker_Table_4419a356.png"
-            alt="Felt Table Mat"
-            className={`absolute inset-0 w-full h-full object-contain pointer-events-none drop-shadow-2xl select-none transition-all duration-500 ${
+            src="/assets/aistudio/Photorealistic_Green_Felt_Poker_Table_580daa35.png"
+            alt="Photorealistic Felt Poker Table"
+            className={`absolute inset-0 w-full h-full object-contain pointer-events-none drop-shadow-[0_20px_50px_rgba(0,0,0,0.85)] select-none transition-all duration-500 ${
               currentSide === 'dark'
                 ? 'filter hue-rotate-180 brightness-75 contrast-125'
                 : 'brightness-100'
             }`}
           />
 
-          {/* Opponents seated in round order (Clockwise) around the poker table */}
+          {/* Opponents seated in round order (Clockwise) along the table wooden rim */}
           {seatedOpponents.map((s) => {
             const opp = s.player;
             const isOppTurn = s.isCurrentTurn;
@@ -449,16 +449,17 @@ export const GameTable: React.FC<GameTableProps> = ({
             return (
               <div
                 key={opp.id}
-                className={`absolute ${positionClass} z-20 flex items-center gap-1.5 p-1 sm:p-1.5 rounded-xl border transition-all duration-200 max-w-[105px] xs:max-w-[125px] sm:max-w-[155px] ${
+                className={`absolute ${positionClass} z-20 flex items-center gap-1.5 p-1 sm:p-2 rounded-xl border backdrop-blur-md shadow-xl transition-all duration-200 max-w-[110px] xs:max-w-[130px] sm:max-w-[160px] select-none ${
                   opp.isEliminated
-                    ? 'bg-red-950/70 border-red-800/80 opacity-60'
+                    ? 'bg-red-950/80 border-red-800 text-red-300 opacity-60'
                     : isOppTurn
                     ? currentSide === 'dark'
-                      ? 'bg-purple-950/95 border-pink-400 ring-2 ring-pink-400/60 shadow-lg shadow-pink-950/80 scale-105'
-                      : 'bg-slate-950/95 border-amber-400 ring-2 ring-amber-400/60 shadow-lg shadow-amber-950/80 scale-105'
-                    : 'bg-slate-950/85 border-slate-800/90 shadow-md backdrop-blur-xs'
+                      ? 'bg-purple-950/95 border-pink-400 ring-2 ring-pink-400/80 shadow-[0_0_20px_rgba(236,72,153,0.4)] scale-105 z-30'
+                      : 'bg-slate-950/95 border-amber-400 ring-2 ring-amber-400/80 shadow-[0_0_20px_rgba(251,191,36,0.4)] scale-105 z-30'
+                    : 'bg-slate-950/90 border-slate-800 hover:border-slate-700'
                 }`}
               >
+                {/* Avatar with Status Glow */}
                 <div className="relative shrink-0">
                   <ModernAvatar
                     avatar={opp.avatar}
@@ -466,41 +467,68 @@ export const GameTable: React.FC<GameTableProps> = ({
                     isCurrentTurn={isOppTurn}
                     hasOneCard={hasOne}
                   />
-                  {/* 20s AFK Timer Badge for active opponent */}
-                  {isOppTurn && (
-                    <div
-                      className={`absolute -bottom-1 -right-1 text-[8px] font-black px-1 rounded-full border leading-tight ${
-                        secondsRemaining <= 5
-                          ? 'bg-rose-600 text-white border-rose-300 animate-pulse'
-                          : 'bg-amber-400 text-slate-950 border-amber-300'
-                      }`}
-                    >
-                      {secondsRemaining}s
+                  {opp.isEliminated && (
+                    <div className="absolute inset-0 bg-red-950/80 rounded-full flex items-center justify-center">
+                      <Skull className="w-3.5 h-3.5 text-red-400" />
                     </div>
                   )}
                 </div>
 
-                <div className="text-left min-w-0 flex-1 leading-tight">
-                  <div className="font-semibold text-[10px] sm:text-xs text-white truncate flex items-center gap-1">
-                    <span className="truncate">{opp.name}</span>
-                    {opp.isEliminated && <Skull className="w-2.5 h-2.5 text-red-400 shrink-0" />}
+                {/* Profile Details: Name, Score, Cards Component, Seconds Component */}
+                <div className="text-left min-w-0 flex-1 leading-tight flex flex-col gap-0.5">
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="font-bold text-[10px] sm:text-xs text-white truncate">
+                      {opp.name}
+                    </span>
+                    <span className="text-[8px] sm:text-[9px] font-mono text-slate-400 shrink-0">
+                      {opp.score}p
+                    </span>
                   </div>
 
-                  <div className="text-[8px] sm:text-[9px] text-slate-400 flex items-center gap-1 mt-0.5">
-                    <span
-                      className={`font-bold ${
+                  {/* Dedicated Cards Component and Seconds Component */}
+                  <div className="flex items-center gap-1 flex-wrap">
+                    {/* Cards Component */}
+                    <div
+                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md font-mono text-[9px] sm:text-[10px] font-bold border ${
                         opp.isEliminated
-                          ? 'text-red-400'
+                          ? 'bg-red-900/40 border-red-800 text-red-300'
                           : hasOne
-                          ? 'text-rose-400 animate-pulse'
-                          : 'text-amber-400'
+                          ? 'bg-rose-500/25 border-rose-500/70 text-rose-300 animate-pulse ring-1 ring-rose-500/50'
+                          : 'bg-slate-900 border-slate-700/80 text-amber-300'
                       }`}
+                      title={`${opp.handCount} cards in hand`}
                     >
-                      {opp.isEliminated ? 'KO' : `${opp.handCount} ${opp.handCount === 1 ? 'CARD!' : 'cards'}`}
-                    </span>
-                    <span>·</span>
-                    <span>{opp.score}p</span>
+                      <span className="text-[10px] leading-none">🂠</span>
+                      <span>{opp.isEliminated ? 'KO' : `${opp.handCount} ${hasOne ? 'UNO!' : ''}`}</span>
+                    </div>
+
+                    {/* Seconds Component for active opponent */}
+                    {isOppTurn && !opp.isEliminated && (
+                      <div
+                        className={`inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-md font-mono text-[9px] sm:text-[10px] font-black border transition-all ${
+                          secondsRemaining <= 5
+                            ? 'bg-rose-600 text-white border-rose-300 shadow-[0_0_10px_rgba(244,63,94,0.8)] animate-pulse'
+                            : 'bg-amber-400 text-slate-950 border-amber-300 shadow-xs'
+                        }`}
+                        title={`${secondsRemaining}s left before AFK skip`}
+                      >
+                        <Clock className="w-2.5 h-2.5 animate-spin text-current" style={{ animationDuration: '4s' }} />
+                        <span>{secondsRemaining}s</span>
+                      </div>
+                    )}
                   </div>
+
+                  {/* 20s Mini Progress Bar for active opponent */}
+                  {isOppTurn && !opp.isEliminated && (
+                    <div className="w-full bg-slate-800 h-1 rounded-full overflow-hidden mt-0.5 border border-slate-700/40">
+                      <div
+                        className={`h-full transition-all duration-200 ${
+                          secondsRemaining <= 5 ? 'bg-rose-500 animate-pulse' : 'bg-amber-400'
+                        }`}
+                        style={{ width: `${Math.min(100, (secondsRemaining / 20) * 100)}%` }}
+                      />
+                    </div>
+                  )}
 
                   {/* UNO Flip: Opponent Reverse Side Spy Preview */}
                   {rules.deckEdition === 'flip' && !opp.isEliminated && opp.hand && opp.hand.length > 0 && (
@@ -525,12 +553,12 @@ export const GameTable: React.FC<GameTableProps> = ({
             );
           })}
 
-          {/* Center Felt Table Interactive Area (Draw Deck, Discard Pile, Beacons) */}
+          {/* Center Felt Table Playground: Cards lying flat in 3D perspective on the green felt */}
           <div className="relative z-10 flex flex-col items-center justify-center gap-1 sm:gap-2 max-w-xs sm:max-w-md w-full px-2">
             {/* Table Top Info: Play Direction & Active Color Beacon */}
             <div className="flex items-center justify-between w-full px-2 text-[10px] sm:text-xs font-semibold">
               {/* Direction */}
-              <div className="flex items-center gap-1 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 text-slate-300 shadow">
+              <div className="flex items-center gap-1 bg-black/80 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/15 text-slate-300 shadow-md">
                 {direction === 1 ? (
                   <>
                     <RotateCw className="w-3 h-3 text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
@@ -551,36 +579,68 @@ export const GameTable: React.FC<GameTableProps> = ({
               </div>
             </div>
 
-            {/* Center Arena: Draw Pile & Discard Pile */}
-            <div className="flex items-center justify-center gap-5 sm:gap-10 my-0.5 sm:my-1">
-              {/* Draw Pile */}
-              <div className="flex flex-col items-center gap-0.5 sm:gap-1">
+            {/* Flat Cards Playground on Green Felt */}
+            <div className="poker-table-perspective flex items-center justify-center gap-6 sm:gap-12 my-1 sm:my-2">
+              {/* Draw Pile: Stacked 3D deck lying flat on the green felt */}
+              <div className="flex flex-col items-center gap-1">
                 <div
                   onClick={() => {
                     if (isMyTurn) onDrawCard();
                     else soundFx.playError();
                   }}
-                  className={`relative group cursor-pointer transition-transform ${
-                    isMyTurn ? 'hover:scale-105 active:scale-95 ring-3 ring-sky-400 rounded-xl' : 'opacity-85 cursor-not-allowed'
+                  className={`relative group cursor-pointer card-flat-deck select-none ${
+                    isMyTurn ? 'ring-2 ring-sky-400 rounded-2xl shadow-sky-500/40' : 'opacity-90 cursor-not-allowed'
                   }`}
                   title={isMyTurn ? 'Tap to draw a card' : 'Wait for your turn'}
                 >
-                  <ModernCard isBack size="md" side={currentSide} />
-                  <span className="absolute -top-1.5 -right-1.5 bg-slate-950 border border-slate-700 text-amber-300 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded-full shadow">
+                  {/* Felt Contact Shadow */}
+                  <div className="absolute inset-0 translate-y-3.5 bg-black/75 rounded-2xl blur-md scale-95 pointer-events-none" />
+
+                  {/* Stacked Deck Depth Layers */}
+                  <div className="absolute inset-0 translate-x-[4px] translate-y-[5px] rounded-xl sm:rounded-2xl bg-slate-900 border border-slate-700/60 shadow pointer-events-none" />
+                  <div className="absolute inset-0 translate-x-[2px] translate-y-[2.5px] rounded-xl sm:rounded-2xl bg-slate-850 border border-slate-700/80 shadow pointer-events-none" />
+
+                  {/* Top Card lying flat */}
+                  <div className="relative z-10 felt-contact-shadow rounded-xl sm:rounded-2xl overflow-hidden">
+                    <ModernCard isBack size="md" side={currentSide} />
+                  </div>
+
+                  {/* Remaining Cards Count Badge */}
+                  <span className="absolute -top-2 -right-2 z-20 bg-slate-950/95 border border-amber-400/80 text-amber-300 text-[9px] sm:text-[11px] font-mono font-black px-1.5 py-0.5 rounded-full shadow-lg">
                     {drawPileCount}
                   </span>
+
+                  {/* Turn Draw Hint Pill */}
+                  {isMyTurn && (
+                    <div className="absolute -bottom-2 inset-x-0 z-20 flex justify-center pointer-events-none">
+                      <span className="bg-sky-500 text-white text-[8px] sm:text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow-lg shadow-sky-950/80 tracking-wider animate-bounce">
+                        Tap Draw
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <span className="text-[9px] sm:text-[11px] font-semibold text-slate-200">
-                  {isMyTurn ? <span className="text-sky-300 font-bold">Tap to Draw</span> : 'Draw Deck'}
+                <span className="text-[10px] sm:text-xs font-bold text-slate-300 drop-shadow mt-1">
+                  Draw Pile
                 </span>
               </div>
 
-              {/* Discard Pile */}
-              <div className="flex flex-col items-center gap-0.5 sm:gap-1">
-                <div className="relative">
-                  <ModernCard card={topDiscard} size="md" side={currentSide} isPlayable={false} />
+              {/* Discard Pile: Resting flat on the green felt with played angle */}
+              <div className="flex flex-col items-center gap-1">
+                <div className="relative card-flat-discard select-none">
+                  {/* Felt Contact Shadow */}
+                  <div className="absolute inset-0 translate-y-3 bg-black/70 rounded-2xl blur-md scale-95 pointer-events-none" />
+
+                  {/* Organic Underlay Card (previously played card on felt) */}
+                  <div className="absolute inset-0 -rotate-8 -translate-x-1 translate-y-1 rounded-xl sm:rounded-2xl bg-slate-900/80 border border-white/20 shadow pointer-events-none opacity-60" />
+
+                  {/* Top Discard Card lying flat */}
+                  <div className={`relative z-10 felt-contact-shadow rounded-xl sm:rounded-2xl overflow-hidden ring-2 ${currentTheme.ring}`}>
+                    <ModernCard card={topDiscard} size="md" side={currentSide} isPlayable={false} />
+                  </div>
                 </div>
-                <span className="text-[9px] sm:text-[11px] font-medium text-slate-300">Discard Pile</span>
+                <span className="text-[10px] sm:text-xs font-semibold text-slate-300 drop-shadow mt-1">
+                  Discard Pile
+                </span>
               </div>
             </div>
 
@@ -593,7 +653,7 @@ export const GameTable: React.FC<GameTableProps> = ({
             )}
 
             {/* Action Log Ticker */}
-            <div className="w-full max-w-xs sm:max-w-sm bg-black/75 backdrop-blur-md border border-white/10 px-3 py-0.5 rounded-full text-center text-[9px] sm:text-[11px] font-medium text-amber-300 truncate shadow-inner">
+            <div className="w-full max-w-xs sm:max-w-sm bg-black/80 backdrop-blur-md border border-white/15 px-3 py-0.5 rounded-full text-center text-[9px] sm:text-[11px] font-medium text-amber-300 truncate shadow-inner">
               {lastActionMessage}
             </div>
           </div>
@@ -612,34 +672,83 @@ export const GameTable: React.FC<GameTableProps> = ({
       >
         {/* Action Controls Toolbar */}
         <div className="max-w-4xl mx-auto w-full flex items-center justify-between px-1 gap-1.5 sm:gap-3 flex-wrap sm:flex-nowrap">
-          {/* Player Identity Info */}
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <ModernAvatar avatar={localPlayer.avatar} size="sm" isCurrentTurn={isMyTurn} />
-            <div className="leading-tight">
-              <div className="font-semibold text-xs sm:text-sm text-white flex items-center gap-1 sm:gap-1.5">
-                <span className="truncate max-w-[80px] xs:max-w-[120px] sm:max-w-none">{localPlayer.name}</span>
-                <span className="text-[8px] sm:text-[9px] font-bold bg-sky-600/30 text-sky-300 border border-sky-500/40 px-1 py-0.2 rounded-full uppercase">
+          {/* Player Identity Info, Cards Component & Seconds Component */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="relative shrink-0">
+              <ModernAvatar avatar={localPlayer.avatar} size="sm" isCurrentTurn={isMyTurn} />
+              {isMyTurn && (
+                <div
+                  className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full ${
+                    secondsRemaining <= 5 ? 'bg-rose-500 animate-ping' : 'bg-amber-400 animate-pulse'
+                  }`}
+                />
+              )}
+            </div>
+
+            <div className="flex flex-col gap-0.5 leading-tight">
+              {/* Row 1: Name, YOU Badge, Score */}
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="font-heading font-black text-xs sm:text-sm text-white truncate max-w-[85px] xs:max-w-[120px] sm:max-w-none">
+                  {localPlayer.name}
+                </span>
+                <span className="text-[8px] sm:text-[9px] font-black bg-sky-500/25 text-sky-300 border border-sky-400/50 px-1.5 py-0.2 rounded-full uppercase tracking-wider">
                   YOU
                 </span>
-                {isMyTurn && (
-                  <span className={`text-[8px] sm:text-[9px] font-extrabold ${
-                    secondsRemaining <= 5
-                      ? 'bg-rose-600 text-white animate-pulse border border-rose-300'
-                      : currentSide === 'dark'
-                      ? 'bg-pink-500 text-white'
-                      : 'bg-amber-400 text-slate-950'
-                  } px-1.5 py-0.2 rounded-full uppercase flex items-center gap-0.5 shadow-xs`}>
-                    <Clock className="w-2.5 h-2.5 text-current animate-spin" style={{ animationDuration: '6s' }} />
+                <span className="text-[10px] sm:text-xs font-mono text-slate-400">
+                  {localPlayer.score}p
+                </span>
+              </div>
+
+              {/* Row 2: Dedicated Cards Component & Seconds Component */}
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                {/* Cards Component */}
+                <div
+                  className={`inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg border font-mono text-[10px] sm:text-xs font-bold transition-all ${
+                    localPlayer.hand.length === 1
+                      ? 'bg-rose-500/30 border-rose-500 text-rose-300 ring-2 ring-rose-500/60 animate-pulse'
+                      : 'bg-slate-900/90 border-slate-700 text-amber-300'
+                  }`}
+                  title={`${localPlayer.hand.length} cards remaining`}
+                >
+                  <span className="text-xs">🂠</span>
+                  <span>
+                    {localPlayer.hand.length} {localPlayer.hand.length === 1 ? 'CARD LEFT!' : 'Cards'}
+                  </span>
+                </div>
+
+                {/* Seconds Component */}
+                {isMyTurn ? (
+                  <div
+                    className={`inline-flex items-center gap-1 px-1.5 sm:px-2 py-0.5 rounded-lg border font-mono text-[10px] sm:text-xs font-black transition-all ${
+                      secondsRemaining <= 5
+                        ? 'bg-rose-600 text-white border-rose-300 ring-2 ring-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.7)] animate-pulse'
+                        : currentSide === 'dark'
+                        ? 'bg-pink-500/30 border-pink-400 text-pink-300'
+                        : 'bg-amber-400 text-slate-950 border-amber-300 shadow-sm'
+                    }`}
+                    title={`${secondsRemaining}s before auto-skip penalty`}
+                  >
+                    <Clock className="w-3 h-3 text-current animate-spin" style={{ animationDuration: '4s' }} />
                     <span>{secondsRemaining}s</span>
+                  </div>
+                ) : (
+                  <span className="text-[10px] sm:text-xs text-slate-400 hidden sm:inline">
+                    Waiting for {currentPlayer?.name}...
                   </span>
                 )}
               </div>
-              <div className="text-[10px] sm:text-xs text-slate-400">
-                <strong className={localPlayer.hand.length === 1 ? 'text-rose-400 font-extrabold' : 'text-slate-200'}>
-                  {localPlayer.hand.length} {localPlayer.hand.length === 1 ? 'CARD LEFT!' : 'Cards'}
-                </strong>{' '}
-                · {localPlayer.score} pts
-              </div>
+
+              {/* Visual 20s Timer Progress Bar for active player */}
+              {isMyTurn && (
+                <div className="w-full max-w-[140px] sm:max-w-[180px] bg-slate-800/90 h-1 rounded-full overflow-hidden mt-0.5 border border-slate-700/60">
+                  <div
+                    className={`h-full transition-all duration-200 ${
+                      secondsRemaining <= 5 ? 'bg-rose-500 animate-pulse' : 'bg-amber-400'
+                    }`}
+                    style={{ width: `${Math.min(100, (secondsRemaining / 20) * 100)}%` }}
+                  />
+                </div>
+              )}
             </div>
           </div>
 
