@@ -7,6 +7,7 @@ interface ActionCardOverlayProps {
   lastActionType?: 'play' | 'draw' | 'skip' | 'reverse' | 'penalty' | 'uno' | 'wild' | 'flip' | 'mercy';
   activeColor: CardColor;
   currentSide?: 'light' | 'dark';
+  onDismiss?: () => void;
 }
 
 export const ActionCardOverlay: React.FC<ActionCardOverlayProps> = ({
@@ -14,9 +15,11 @@ export const ActionCardOverlay: React.FC<ActionCardOverlayProps> = ({
   lastActionType,
   activeColor,
   currentSide = 'light',
+  onDismiss,
 }) => {
   const [visible, setVisible] = useState(false);
   const [currentAction, setCurrentAction] = useState<string | null>(null);
+  const lastTriggeredKeyRef = React.useRef<string>('');
 
   useEffect(() => {
     // Only trigger for special action types
@@ -29,21 +32,43 @@ export const ActionCardOverlay: React.FC<ActionCardOverlayProps> = ({
       lastActionType === 'flip' ||
       lastActionType === 'mercy'
     ) {
+      const actionKey = `${lastActionType}::${lastActionMessage}`;
+      // Prevent repeated re-triggers for the same action event
+      if (actionKey === lastTriggeredKeyRef.current) {
+        return;
+      }
+
+      lastTriggeredKeyRef.current = actionKey;
       setCurrentAction(lastActionType);
       setVisible(true);
 
       const timer = setTimeout(() => {
         setVisible(false);
-      }, 1900);
+        setCurrentAction(null);
+        if (onDismiss) onDismiss();
+      }, 1300);
 
       return () => clearTimeout(timer);
+    } else {
+      setVisible(false);
+      setCurrentAction(null);
     }
-  }, [lastActionMessage, lastActionType]);
+  }, [lastActionMessage, lastActionType, onDismiss]);
+
+  const handleDismiss = () => {
+    setVisible(false);
+    setCurrentAction(null);
+    if (onDismiss) onDismiss();
+  };
 
   if (!visible || !currentAction) return null;
 
   return (
-    <div className="fixed inset-0 z-40 pointer-events-none flex items-center justify-center p-4">
+    <div
+      onClick={handleDismiss}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 cursor-pointer select-none"
+      title="Tap anywhere to dismiss"
+    >
       {/* Background ripple / flash */}
       <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-xs animate-in fade-in duration-150" />
 

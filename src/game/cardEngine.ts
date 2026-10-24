@@ -430,6 +430,45 @@ export const getNextPlayerIndex = (
   return next;
 };
 
+export interface SeatedPlayerInfo {
+  player: Player;
+  originalIndex: number;
+  seatIndex: number; // 0 = local player at bottom, 1..N-1 = clockwise opponents around table
+  isLocalPlayer: boolean;
+  isCurrentTurn: boolean;
+}
+
+// Arranges players around an oval poker table in clockwise round order starting from local player
+export const getSeatedPlayersAroundTable = (
+  players: Player[],
+  localPlayerId: string,
+  currentPlayerIndex: number
+): SeatedPlayerInfo[] => {
+  if (!players || players.length === 0) return [];
+
+  let localIndex = players.findIndex((p) => p.id === localPlayerId);
+  if (localIndex === -1) localIndex = 0;
+
+  const N = players.length;
+  const seated: SeatedPlayerInfo[] = [];
+
+  for (let seat = 0; seat < N; seat++) {
+    const originalIndex = (localIndex + seat) % N;
+    const player = players[originalIndex];
+    if (player) {
+      seated.push({
+        player,
+        originalIndex,
+        seatIndex: seat,
+        isLocalPlayer: seat === 0,
+        isCurrentTurn: originalIndex === currentPlayerIndex,
+      });
+    }
+  }
+
+  return seated;
+};
+
 // Reshuffle draw pile from discard pile if empty
 export const replenishDrawPile = (
   drawPile: Card[],

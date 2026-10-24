@@ -18,6 +18,7 @@ import {
   RefreshCw,
   Skull,
   Eye,
+  Clock,
 } from 'lucide-react';
 import { Card, CardColor, GameTableState } from '../../types/game';
 import { ModernCard } from '../modern/ModernCard';
@@ -26,8 +27,60 @@ import { WildColorPicker } from './WildColorPicker';
 import { RoundEndModal } from './RoundEndModal';
 import { ActionCardOverlay } from '../common/ActionCardOverlay';
 import { PixelParticles } from '../pixel/PixelParticles';
-import { isCardPlayable } from '../../game/cardEngine';
+import { isCardPlayable, getSeatedPlayersAroundTable } from '../../game/cardEngine';
 import { soundFx } from '../../sound/soundFx';
+
+const getSeatPositionClass = (seatIndex: number, totalPlayers: number): string => {
+  // seatIndex 0 is Local Player (rendered in bottom hand toolbar).
+  // seatIndex 1..totalPlayers-1 are opponents positioned clockwise around the oval poker table.
+  if (totalPlayers === 2) {
+    return 'top-1 sm:top-3 left-1/2 -translate-x-1/2';
+  }
+
+  if (totalPlayers === 3) {
+    if (seatIndex === 1) return 'top-3 sm:top-6 right-[8%] sm:right-[14%]';
+    return 'top-3 sm:top-6 left-[8%] sm:left-[14%]';
+  }
+
+  if (totalPlayers === 4) {
+    if (seatIndex === 1) return 'top-1/2 left-0.5 sm:left-2 -translate-y-1/2';
+    if (seatIndex === 2) return 'top-1 sm:top-3 left-1/2 -translate-x-1/2';
+    return 'top-1/2 right-0.5 sm:right-2 -translate-y-1/2';
+  }
+
+  if (totalPlayers === 5) {
+    if (seatIndex === 1) return 'bottom-6 sm:bottom-10 left-0.5 sm:left-2';
+    if (seatIndex === 2) return 'top-1 sm:top-3 left-[12%] sm:left-[16%]';
+    if (seatIndex === 3) return 'top-1 sm:top-3 right-[12%] sm:right-[16%]';
+    return 'bottom-6 sm:bottom-10 right-0.5 sm:right-2';
+  }
+
+  if (totalPlayers === 6) {
+    if (seatIndex === 1) return 'bottom-6 sm:bottom-10 left-0.5 sm:left-2';
+    if (seatIndex === 2) return 'top-3 sm:top-5 left-[10%] sm:left-[14%]';
+    if (seatIndex === 3) return 'top-1 sm:top-2 left-1/2 -translate-x-1/2';
+    if (seatIndex === 4) return 'top-3 sm:top-5 right-[10%] sm:right-[14%]';
+    return 'bottom-6 sm:bottom-10 right-0.5 sm:right-2';
+  }
+
+  if (totalPlayers === 7) {
+    if (seatIndex === 1) return 'bottom-5 sm:bottom-8 left-0.5 sm:left-1';
+    if (seatIndex === 2) return 'top-[36%] left-0 sm:left-1 -translate-y-1/2';
+    if (seatIndex === 3) return 'top-1 sm:top-3 left-[16%] sm:left-[20%]';
+    if (seatIndex === 4) return 'top-1 sm:top-3 right-[16%] sm:right-[20%]';
+    if (seatIndex === 5) return 'top-[36%] right-0 sm:right-1 -translate-y-1/2';
+    return 'bottom-5 sm:bottom-8 right-0.5 sm:right-1';
+  }
+
+  // 8 players
+  if (seatIndex === 1) return 'bottom-5 sm:bottom-8 left-0.5 sm:left-1';
+  if (seatIndex === 2) return 'top-[36%] left-0 sm:left-1 -translate-y-1/2';
+  if (seatIndex === 3) return 'top-1 sm:top-3 left-[14%] sm:left-[18%]';
+  if (seatIndex === 4) return 'top-0.5 sm:top-2 left-1/2 -translate-x-1/2';
+  if (seatIndex === 5) return 'top-1 sm:top-3 right-[14%] sm:right-[18%]';
+  if (seatIndex === 6) return 'top-[36%] right-0 sm:right-1 -translate-y-1/2';
+  return 'bottom-5 sm:bottom-8 right-0.5 sm:right-1';
+};
 
 interface GameTableProps {
   tableState: GameTableState;
@@ -92,8 +145,19 @@ export const GameTable: React.FC<GameTableProps> = ({
   const localPlayer = players.find((p) => p.id === localPlayerId) || players[0];
   const topDiscard = discardPile[discardPile.length - 1];
 
-  // Up to 7 opponents
-  const opponents = players.filter((p) => p.id !== localPlayer.id);
+  // 20s Live Turn Timer Clock
+  const [now, setNow] = useState(Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 250);
+    return () => clearInterval(timer);
+  }, []);
+
+  const turnElapsedMs = Math.max(0, now - (tableState.turnStartTime || now));
+  const secondsRemaining = Math.max(0, Math.ceil((20000 - turnElapsedMs) / 1000));
+
+  // Arrange players in strict round order around the poker table starting with local player
+  const seatedPlayers = getSeatedPlayersAroundTable(players, localPlayerId, currentPlayerIndex);
+  const seatedOpponents = seatedPlayers.filter((s) => !s.isLocalPlayer);
 
   // Track previous turn to trigger audio and voice alerts when turn begins
   const wasMyTurnRef = useRef(false);
@@ -361,164 +425,177 @@ export const GameTable: React.FC<GameTableProps> = ({
         </div>
       </header>
 
-      {/* Up to 7 Opponents Perimeter Layout (Horizontal scroll on mobile, flex-wrap on desktop) */}
-      <div className="relative z-10 w-full px-2 sm:px-3 pt-1.5 pb-1 flex items-center justify-start sm:justify-center gap-1.5 sm:gap-3 overflow-x-auto no-scrollbar sm:flex-wrap max-w-6xl mx-auto">
-        {opponents.map((opp) => {
-          const isOppTurn = currentPlayer?.id === opp.id;
-          const hasOne = opp.handCount === 1;
+      {/* Poker Table Arena with 2-8 Seated Opponents Layout */}
+      <main className="relative z-10 flex-1 min-h-0 w-full max-w-5xl mx-auto px-1 sm:px-3 flex flex-col items-center justify-center overflow-hidden my-auto select-none">
+        <div className="relative w-full h-full max-h-[350px] xs:max-h-[380px] sm:max-h-[440px] md:max-h-[490px] flex items-center justify-center">
+          {/* Uploaded Green Felt Poker Table Image blended in background */}
+          <img
+            src="/assets/aistudio/Minimalist_Green_Felt_Poker_Table_4419a356.png"
+            alt="Felt Table Mat"
+            className={`absolute inset-0 w-full h-full object-contain pointer-events-none drop-shadow-2xl select-none transition-all duration-500 ${
+              currentSide === 'dark'
+                ? 'filter hue-rotate-180 brightness-75 contrast-125'
+                : 'brightness-100'
+            }`}
+          />
 
-          return (
-            <div
-              key={opp.id}
-              className={`p-1.5 sm:p-2 rounded-xl border shrink-0 transition-all flex items-center gap-2 ${
-                opp.isEliminated
-                  ? 'bg-red-950/40 border-red-800/60 opacity-60'
-                  : isOppTurn
-                  ? currentSide === 'dark'
-                    ? 'bg-purple-950/90 border-pink-400 shadow-md shadow-pink-950/60 ring-2 ring-pink-400/40 scale-102'
-                    : 'bg-slate-900/95 border-amber-400 shadow-md shadow-amber-950/40 ring-2 ring-amber-400/40 scale-102'
-                  : 'bg-slate-950/80 border-slate-800/80 backdrop-blur-xs'
-              }`}
-            >
-              <ModernAvatar
-                avatar={opp.avatar}
-                size="sm"
-                isCurrentTurn={isOppTurn}
-                hasOneCard={hasOne}
-              />
-              <div className="text-left">
-                <div className="font-semibold text-[11px] sm:text-xs text-white truncate max-w-[76px] sm:max-w-[120px] flex items-center gap-1">
-                  <span>{opp.name}</span>
-                  {opp.isEliminated && <Skull className="w-3 h-3 text-red-400 shrink-0" />}
+          {/* Opponents seated in round order (Clockwise) around the poker table */}
+          {seatedOpponents.map((s) => {
+            const opp = s.player;
+            const isOppTurn = s.isCurrentTurn;
+            const hasOne = opp.handCount === 1;
+            const positionClass = getSeatPositionClass(s.seatIndex, players.length);
+
+            return (
+              <div
+                key={opp.id}
+                className={`absolute ${positionClass} z-20 flex items-center gap-1.5 p-1 sm:p-1.5 rounded-xl border transition-all duration-200 max-w-[105px] xs:max-w-[125px] sm:max-w-[155px] ${
+                  opp.isEliminated
+                    ? 'bg-red-950/70 border-red-800/80 opacity-60'
+                    : isOppTurn
+                    ? currentSide === 'dark'
+                      ? 'bg-purple-950/95 border-pink-400 ring-2 ring-pink-400/60 shadow-lg shadow-pink-950/80 scale-105'
+                      : 'bg-slate-950/95 border-amber-400 ring-2 ring-amber-400/60 shadow-lg shadow-amber-950/80 scale-105'
+                    : 'bg-slate-950/85 border-slate-800/90 shadow-md backdrop-blur-xs'
+                }`}
+              >
+                <div className="relative shrink-0">
+                  <ModernAvatar
+                    avatar={opp.avatar}
+                    size="sm"
+                    isCurrentTurn={isOppTurn}
+                    hasOneCard={hasOne}
+                  />
+                  {/* 20s AFK Timer Badge for active opponent */}
+                  {isOppTurn && (
+                    <div
+                      className={`absolute -bottom-1 -right-1 text-[8px] font-black px-1 rounded-full border leading-tight ${
+                        secondsRemaining <= 5
+                          ? 'bg-rose-600 text-white border-rose-300 animate-pulse'
+                          : 'bg-amber-400 text-slate-950 border-amber-300'
+                      }`}
+                    >
+                      {secondsRemaining}s
+                    </div>
+                  )}
                 </div>
 
-                <div className="text-[9px] sm:text-[10px] text-slate-400 flex items-center gap-1.5 mt-0.5">
-                  <span className={`font-bold ${opp.isEliminated ? 'text-red-400' : hasOne ? 'text-rose-400 animate-pulse' : 'text-amber-400'}`}>
-                    {opp.isEliminated ? 'KNOCKED OUT' : `${opp.handCount} ${opp.handCount === 1 ? 'CARD!' : 'Cards'}`}
-                  </span>
-                  <span>·</span>
-                  <span>{opp.score} pts</span>
-                </div>
-
-                {/* Opponents' Reverse Side Spy Preview (UNO Flip feature) */}
-                {rules.deckEdition === 'flip' && !opp.isEliminated && opp.hand && opp.hand.length > 0 && (
-                  <div className="flex items-center -space-x-3 overflow-hidden max-w-[80px] sm:max-w-[110px] mt-1 pt-0.5 border-t border-white/10" title="Opponent's Reverse Cards (visible to you!)">
-                    {opp.hand.slice(0, 4).map((c, i) => (
-                      <div key={c.id || i} className="shrink-0 hover:z-20 transition-transform">
-                        <ModernCard card={c} size="xs" side={currentSide} showReverse={true} />
-                      </div>
-                    ))}
-                    {opp.hand.length > 4 && (
-                      <span className="text-[7px] font-bold text-amber-300 bg-black/80 border border-slate-700 px-1 rounded-full z-10 shrink-0">
-                        +{opp.hand.length - 4}
-                      </span>
-                    )}
+                <div className="text-left min-w-0 flex-1 leading-tight">
+                  <div className="font-semibold text-[10px] sm:text-xs text-white truncate flex items-center gap-1">
+                    <span className="truncate">{opp.name}</span>
+                    {opp.isEliminated && <Skull className="w-2.5 h-2.5 text-red-400 shrink-0" />}
                   </div>
+
+                  <div className="text-[8px] sm:text-[9px] text-slate-400 flex items-center gap-1 mt-0.5">
+                    <span
+                      className={`font-bold ${
+                        opp.isEliminated
+                          ? 'text-red-400'
+                          : hasOne
+                          ? 'text-rose-400 animate-pulse'
+                          : 'text-amber-400'
+                      }`}
+                    >
+                      {opp.isEliminated ? 'KO' : `${opp.handCount} ${opp.handCount === 1 ? 'CARD!' : 'cards'}`}
+                    </span>
+                    <span>·</span>
+                    <span>{opp.score}p</span>
+                  </div>
+
+                  {/* UNO Flip: Opponent Reverse Side Spy Preview */}
+                  {rules.deckEdition === 'flip' && !opp.isEliminated && opp.hand && opp.hand.length > 0 && (
+                    <div
+                      className="flex items-center -space-x-2.5 overflow-hidden max-w-[65px] sm:max-w-[85px] mt-0.5 pt-0.5 border-t border-white/10"
+                      title="Opponent's Reverse Cards"
+                    >
+                      {opp.hand.slice(0, 3).map((c, i) => (
+                        <div key={c.id || i} className="shrink-0 hover:z-20 transition-transform">
+                          <ModernCard card={c} size="xs" side={currentSide} showReverse={true} />
+                        </div>
+                      ))}
+                      {opp.hand.length > 3 && (
+                        <span className="text-[6px] font-bold text-amber-300 bg-black/80 border border-slate-700 px-0.5 rounded-full z-10 shrink-0">
+                          +{opp.hand.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+
+          {/* Center Felt Table Interactive Area (Draw Deck, Discard Pile, Beacons) */}
+          <div className="relative z-10 flex flex-col items-center justify-center gap-1 sm:gap-2 max-w-xs sm:max-w-md w-full px-2">
+            {/* Table Top Info: Play Direction & Active Color Beacon */}
+            <div className="flex items-center justify-between w-full px-2 text-[10px] sm:text-xs font-semibold">
+              {/* Direction */}
+              <div className="flex items-center gap-1 bg-black/75 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 text-slate-300 shadow">
+                {direction === 1 ? (
+                  <>
+                    <RotateCw className="w-3 h-3 text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
+                    <span className="text-[9px] sm:text-xs">Clockwise</span>
+                  </>
+                ) : (
+                  <>
+                    <RotateCcw className="w-3 h-3 text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
+                    <span className="text-[9px] sm:text-xs">Counter-CW</span>
+                  </>
                 )}
               </div>
-            </div>
-          );
-        })}
-      </div>
 
-      {/* Center Modern Casino Felt Game Table Mat */}
-      <main className="relative z-10 flex-1 min-h-0 w-full max-w-4xl mx-auto px-2 sm:px-4 flex flex-col items-center justify-center my-0.5 sm:my-1 overflow-hidden">
-        {/* Prominent Floating Player Turn Banner */}
-        {isMyTurn && (
-          <div className={`w-full max-w-md mx-auto mb-1 px-3 py-1 rounded-full ${
-            currentSide === 'dark'
-              ? 'bg-gradient-to-r from-pink-500/20 via-purple-600/30 to-pink-500/20 border border-pink-400 text-pink-200 shadow-[0_0_20px_rgba(236,72,153,0.4)]'
-              : 'bg-gradient-to-r from-amber-500/20 via-yellow-400/30 to-amber-500/20 border border-amber-400 text-amber-200 shadow-[0_0_20px_rgba(251,191,36,0.35)]'
-          } font-heading font-black text-[10px] sm:text-xs flex items-center justify-center gap-1.5 animate-bounce tracking-wide select-none shrink-0`}>
-            <Sparkles className="w-3 h-3 text-current animate-spin" />
-            <span>IT'S YOUR TURN! TAP A CARD OR DRAW DECK</span>
-            <Sparkles className="w-3 h-3 text-current animate-spin" />
-          </div>
-        )}
-
-        {/* Luxury Felt Table Container */}
-        <div
-          className={`relative w-full max-w-xl py-2 sm:py-4 px-2.5 sm:px-5 ${
-            currentSide === 'dark'
-              ? 'bg-gradient-to-b from-purple-950/70 via-slate-950 to-black border-2 border-purple-500/80 shadow-[0_0_30px_rgba(168,85,247,0.35)]'
-              : `felt-table border-2 ${currentTheme.ring}`
-          } rounded-2xl sm:rounded-3xl card-shadow flex flex-col items-center justify-between gap-1.5 sm:gap-3 transition-all duration-500 my-auto`}
-        >
-          {/* Top Info Bar inside Table: Direction & Active Color Beacon */}
-          <div className="relative z-10 w-full flex items-center justify-between px-2 text-[10px] sm:text-xs font-semibold">
-            {/* Play Direction */}
-            <div className="flex items-center gap-1 sm:gap-1.5 bg-black/50 backdrop-blur-md px-2.5 py-1 rounded-full border border-white/10 text-slate-300">
-              {direction === 1 ? (
-                <>
-                  <RotateCw className="w-3 h-3 text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
-                  <span>Clockwise</span>
-                </>
-              ) : (
-                <>
-                  <RotateCcw className="w-3 h-3 text-amber-400 animate-spin" style={{ animationDuration: '6s' }} />
-                  <span>Counter-Clockwise</span>
-                </>
-              )}
+              {/* Active Color Beacon */}
+              <div className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-bold text-white shadow-md ${currentTheme.bg}`}>
+                <div className="w-2 h-2 rounded-full bg-white shadow-xs" />
+                <span className="uppercase tracking-wider text-[9px] sm:text-xs">Active: {activeColor}</span>
+              </div>
             </div>
 
-            {/* Active Color Beacon */}
-            <div
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-full font-bold text-white shadow-md ${currentTheme.bg}`}
-            >
-              <div className="w-2 h-2 rounded-full bg-white shadow-sm" />
-              <span className="uppercase tracking-wider">Active: {activeColor}</span>
-            </div>
-          </div>
-
-          {/* Center Arena: Draw Pile & Discard Pile */}
-          <div className="relative z-10 flex items-center justify-center gap-5 sm:gap-12 my-0.5 sm:my-1">
-            {/* Draw Pile (Deck) */}
-            <div className="flex flex-col items-center gap-1">
-              <div
-                onClick={() => {
-                  if (isMyTurn) {
-                    onDrawCard();
-                  } else {
-                    soundFx.playError();
-                  }
-                }}
-                className={`relative group cursor-pointer transition-transform ${
-                  isMyTurn ? 'hover:scale-105 active:scale-95 ring-3 ring-sky-400 rounded-xl sm:rounded-2xl' : 'opacity-85 cursor-not-allowed'
-                }`}
-                title={isMyTurn ? 'Tap to draw a card' : "Wait for your turn"}
-              >
-                <ModernCard isBack size="md" side={currentSide} />
-                <span className="absolute -top-1.5 -right-1.5 bg-slate-950 border border-slate-700 text-amber-300 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded-full shadow">
-                  {drawPileCount}
+            {/* Center Arena: Draw Pile & Discard Pile */}
+            <div className="flex items-center justify-center gap-5 sm:gap-10 my-0.5 sm:my-1">
+              {/* Draw Pile */}
+              <div className="flex flex-col items-center gap-0.5 sm:gap-1">
+                <div
+                  onClick={() => {
+                    if (isMyTurn) onDrawCard();
+                    else soundFx.playError();
+                  }}
+                  className={`relative group cursor-pointer transition-transform ${
+                    isMyTurn ? 'hover:scale-105 active:scale-95 ring-3 ring-sky-400 rounded-xl' : 'opacity-85 cursor-not-allowed'
+                  }`}
+                  title={isMyTurn ? 'Tap to draw a card' : 'Wait for your turn'}
+                >
+                  <ModernCard isBack size="md" side={currentSide} />
+                  <span className="absolute -top-1.5 -right-1.5 bg-slate-950 border border-slate-700 text-amber-300 text-[9px] sm:text-[10px] font-bold px-1.5 py-0.2 rounded-full shadow">
+                    {drawPileCount}
+                  </span>
+                </div>
+                <span className="text-[9px] sm:text-[11px] font-semibold text-slate-200">
+                  {isMyTurn ? <span className="text-sky-300 font-bold">Tap to Draw</span> : 'Draw Deck'}
                 </span>
               </div>
-              <span className="text-[10px] sm:text-xs font-semibold text-slate-300 flex items-center gap-1">
-                {isMyTurn ? <span className="text-sky-300 font-bold">Tap to Draw</span> : 'Draw Deck'}
-              </span>
-            </div>
 
-            {/* Center Discard Pile */}
-            <div className="flex flex-col items-center gap-1">
-              <div className="relative">
-                <ModernCard card={topDiscard} size="md" side={currentSide} isPlayable={false} />
+              {/* Discard Pile */}
+              <div className="flex flex-col items-center gap-0.5 sm:gap-1">
+                <div className="relative">
+                  <ModernCard card={topDiscard} size="md" side={currentSide} isPlayable={false} />
+                </div>
+                <span className="text-[9px] sm:text-[11px] font-medium text-slate-300">Discard Pile</span>
               </div>
-              <span className="text-[10px] sm:text-xs font-medium text-slate-300">Discard Pile</span>
             </div>
-          </div>
 
-          {/* Stacking Penalty Alert Banner */}
-          {pendingDrawPenalty > 0 && (
-            <div className="relative z-10 px-3 py-1 rounded-lg sm:rounded-xl bg-rose-950/90 border border-rose-500 font-bold text-[10px] sm:text-xs text-rose-200 flex items-center gap-1.5 animate-bounce shadow-md">
-              <AlertTriangle className="w-3.5 h-3.5 text-rose-400 fill-current" />
-              <span>
-                Stacking Active! Penalty pool is +{pendingDrawPenalty} cards.
-              </span>
+            {/* Stacking Penalty Alert Banner */}
+            {pendingDrawPenalty > 0 && (
+              <div className="px-3 py-0.5 rounded-full bg-rose-950/90 border border-rose-500 font-bold text-[10px] sm:text-xs text-rose-200 flex items-center gap-1.5 animate-bounce shadow-md">
+                <AlertTriangle className="w-3.5 h-3.5 text-rose-400 fill-current" />
+                <span>Stacking: +{pendingDrawPenalty} cards</span>
+              </div>
+            )}
+
+            {/* Action Log Ticker */}
+            <div className="w-full max-w-xs sm:max-w-sm bg-black/75 backdrop-blur-md border border-white/10 px-3 py-0.5 rounded-full text-center text-[9px] sm:text-[11px] font-medium text-amber-300 truncate shadow-inner">
+              {lastActionMessage}
             </div>
-          )}
-
-          {/* Action Log Ticker */}
-          <div className="relative z-10 w-full max-w-sm bg-black/60 backdrop-blur-md border border-white/10 px-3 py-1 rounded-lg text-center text-[10px] sm:text-xs font-medium text-amber-300 truncate shadow-inner">
-            {lastActionMessage}
           </div>
         </div>
       </main>
@@ -545,8 +622,15 @@ export const GameTable: React.FC<GameTableProps> = ({
                   YOU
                 </span>
                 {isMyTurn && (
-                  <span className={`text-[8px] sm:text-[9px] font-extrabold ${currentSide === 'dark' ? 'bg-pink-500 text-white' : 'bg-amber-400 text-slate-950'} px-1.5 py-0.2 rounded-full uppercase animate-pulse`}>
-                    TURN
+                  <span className={`text-[8px] sm:text-[9px] font-extrabold ${
+                    secondsRemaining <= 5
+                      ? 'bg-rose-600 text-white animate-pulse border border-rose-300'
+                      : currentSide === 'dark'
+                      ? 'bg-pink-500 text-white'
+                      : 'bg-amber-400 text-slate-950'
+                  } px-1.5 py-0.2 rounded-full uppercase flex items-center gap-0.5 shadow-xs`}>
+                    <Clock className="w-2.5 h-2.5 text-current animate-spin" style={{ animationDuration: '6s' }} />
+                    <span>{secondsRemaining}s</span>
                   </span>
                 )}
               </div>

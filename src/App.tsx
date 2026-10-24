@@ -608,6 +608,122 @@ export default function App() {
     [drawCardsFromDeck]
   );
 
+  // 5. AFK Skip Player Turn (triggered after 20s of inactivity)
+  const executeAfkSkip = useCallback(
+    (playerId: string) => {
+      const prev = tableStateRef.current;
+      if (prev.phase !== 'PLAYING') return;
+      const playerIndex = prev.players.findIndex((p) => p.id === playerId);
+      if (playerIndex === -1 || playerIndex !== prev.currentPlayerIndex) return;
+
+      const player = prev.players[playerIndex];
+      soundFx.playSkip();
+      soundFx.speak(`Player ${player.name} AFK. Turn skipped!`);
+
+      // Penalty draw for AFK: if stacking penalty active, draw that pool; otherwise draw 1 card
+      const countToDraw = prev.pendingDrawPenalty > 0 ? prev.pendingDrawPenalty : 1;
+      const { drawn: penaltyCards, newDiscardPile } = drawCardsFromDeck(countToDraw);
+
+      const updatedPlayer: Player = {
+        ...player,
+        hand: [...player.hand, ...penaltyCards],
+        handCount: player.hand.length + penaltyCards.length,
+        hasCalledUno: false,
+      };
+
+      const updatedPlayers = [...prev.players];
+      updatedPlayers[playerIndex] = updatedPlayer;
+
+      let actionMsg = `⏱️ ${player.name} went AFK (20s)! Drew ${countToDraw} card${countToDraw > 1 ? 's' : ''} & turn skipped.`;
+      let eliminatedIds = [...(prev.eliminatedPlayerIds || [])];
+
+      if (prev.rules.mercyRule && updatedPlayer.hand.length >= 25 && !updatedPlayer.isEliminated) {
+        updatedPlayer.isEliminated = true;
+        if (!eliminatedIds.includes(player.id)) eliminatedIds.push(player.id);
+        soundFx.speakMercyEliminated(player.name);
+        actionMsg += ` ☠ MERCY RULE: Knocked out!`;
+      }
+
+      const nextIndex = getNextPlayerIndex(
+        prev.currentPlayerIndex,
+        prev.direction,
+        1,
+        prev.players.length,
+        eliminatedIds,
+        updatedPlayers
+      );
+
+      const nextTableState: GameTableState = {
+        ...prev,
+        players: updatedPlayers,
+        currentPlayerIndex: nextIndex,
+        discardPile: newDiscardPile || prev.discardPile,
+        drawPileCount: fullDeckRef.current.length,
+        pendingDrawPenalty: 0,
+        unoCallPendingPlayerId: null,
+        lastActionMessage: actionMsg,
+        lastActionType: 'skip',
+        turnStartTime: Date.now(),
+        currentSide: prev.currentSide || 'light',
+        eliminatedPlayerIds: eliminatedIds,
+      };
+
+      if (prev.mode === 'pass_and_play') {
+        setLocalPlayerId(updatedPlayers[nextIndex].id);
+        setPassAndPlayWaiting(true);
+      }
+
+      setTableState(nextTableState);
+
+      if (isHostRef.current) {
+        networkSync.broadcast({
+          type: 'TABLE_SYNC',
+          roomCode: prev.roomCode,
+          tableState: nextTableState,
+        });
+      }
+    },
+    [drawCardsFromDeck]
+  );
+
+  // Authoritative 20-second AFK Player Turn Timer (Host-managed)
+  useEffect(() => {
+    if (!isHost || tableState.phase !== 'PLAYING') return;
+
+    const interval = setInterval(() => {
+      const current = tableStateRef.current;
+      if (current.phase !== 'PLAYING') return;
+
+      const activePlayer = current.players[current.currentPlayerIndex];
+      if (!activePlayer || activePlayer.isEliminated) return;
+
+      const elapsed = Date.now() - (current.turnStartTime || Date.now());
+      if (elapsed >= 20000) {
+        // Player is AFK! Skip turn
+        executeAfkSkip(activePlayer.id);
+      }
+    }, 500);
+
+    return () => clearInterval(interval);
+  }, [isHost, tableState.phase, executeAfkSkip]);
+
+  // Auto-reset lastActionType to 'play' after 1.4s to prevent sticky action overlays
+  useEffect(() => {
+    if (
+      tableState.lastActionType &&
+      tableState.lastActionType !== 'play' &&
+      tableState.lastActionType !== 'draw'
+    ) {
+      const timer = setTimeout(() => {
+        setTableState((prev) => ({
+          ...prev,
+          lastActionType: 'play',
+        }));
+      }, 1400);
+      return () => clearTimeout(timer);
+    }
+  }, [tableState.lastActionType, tableState.lastActionMessage]);
+
   // Subscribe to real-time events across Supabase, SSE, and local tabs
   useEffect(() => {
     const unsubscribe = networkSync.subscribe((msg: NetworkMessage) => {

@@ -272,11 +272,11 @@ export const ModernCard: React.FC<ModernCardProps> = ({
     if (face.type === 'skip_everyone') {
       return (
         <div className="flex flex-col items-center justify-center">
-          <div className="flex items-center -space-x-1.5">
+          <div className="flex items-center -space-x-1">
             <Ban className={`${currentSize.iconSize} text-white drop-shadow-md`} />
             <Ban className={`${currentSize.iconSize} text-amber-300 drop-shadow-md`} />
           </div>
-          <span className="font-heading font-black text-[8px] sm:text-[10px] tracking-wider mt-0.5 text-amber-300 uppercase leading-none">
+          <span className="mt-0.5 px-1 py-0.2 bg-white text-slate-950 font-heading font-black text-[7px] sm:text-[8px] rounded-full tracking-wider uppercase leading-none shadow-xs">
             SKIP ALL
           </span>
         </div>
@@ -286,8 +286,10 @@ export const ModernCard: React.FC<ModernCardProps> = ({
     if (face.type === 'skip') {
       return (
         <div className="flex flex-col items-center justify-center">
-          <Ban className={`${currentSize.iconSize} drop-shadow-md`} />
-          <span className="font-heading font-bold text-[9px] sm:text-xs tracking-wider mt-0.5">SKIP</span>
+          <Ban className={`${currentSize.iconSize} text-white drop-shadow-md stroke-[2.5]`} />
+          <span className="mt-0.5 px-1.5 py-0.2 bg-white text-slate-950 font-heading font-black text-[7px] sm:text-[8px] rounded-full tracking-wider uppercase leading-none shadow-xs">
+            SKIP
+          </span>
         </div>
       );
     }
@@ -295,8 +297,10 @@ export const ModernCard: React.FC<ModernCardProps> = ({
     if (face.type === 'reverse') {
       return (
         <div className="flex flex-col items-center justify-center">
-          <Repeat className={`${currentSize.iconSize} drop-shadow-md`} />
-          <span className="font-heading font-bold text-[9px] sm:text-xs tracking-wider mt-0.5">REVERSE</span>
+          <Repeat className={`${currentSize.iconSize} text-white drop-shadow-md stroke-[2.5]`} />
+          <span className="mt-0.5 px-1.5 py-0.2 bg-white text-slate-950 font-heading font-black text-[7px] sm:text-[8px] rounded-full tracking-wider uppercase leading-none shadow-xs">
+            REVERSE
+          </span>
         </div>
       );
     }
@@ -319,11 +323,21 @@ export const ModernCard: React.FC<ModernCardProps> = ({
 
       return (
         <div className="flex flex-col items-center justify-center">
-          <div className="flex items-center gap-0.5 font-heading font-black text-xl sm:text-3xl drop-shadow-md">
-            <span>{label}</span>
-            {face.type === 'draw5' && <Flame className="w-3.5 h-3.5 text-amber-300 animate-pulse" />}
-          </div>
-          <span className="font-heading font-bold text-[8px] sm:text-[10px] tracking-wider uppercase opacity-90">
+          {face.type === 'draw2' ? (
+            <div className="relative w-7 h-7 sm:w-10 sm:h-10 flex items-center justify-center">
+              <div className="w-5 h-7 rounded-sm border-2 border-white bg-white/20 rotate-[-10deg] absolute" />
+              <div className="w-5 h-7 rounded-sm border-2 border-white bg-white/30 rotate-[12deg] absolute" />
+              <span className="relative z-10 font-heading font-black text-sm sm:text-base text-white drop-shadow-md">
+                +2
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-0.5 font-heading font-black text-xl sm:text-3xl drop-shadow-md">
+              <span>{label}</span>
+              {face.type === 'draw5' && <Flame className="w-3.5 h-3.5 text-amber-300 animate-pulse" />}
+            </div>
+          )}
+          <span className="font-heading font-bold text-[7px] sm:text-[9px] tracking-wider uppercase opacity-95">
             {face.type === 'draw5' ? 'DARK DRAW' : 'CARDS'}
           </span>
         </div>
@@ -335,17 +349,20 @@ export const ModernCard: React.FC<ModernCardProps> = ({
       return (
         <div className="flex flex-col items-center justify-center">
           <Layers className={`${currentSize.iconSize} drop-shadow-md`} />
-          <span className="font-heading font-black text-[8px] sm:text-[9px] tracking-wider mt-0.5 text-amber-300 uppercase leading-tight text-center">
+          <span className="font-heading font-black text-[7px] sm:text-[8px] tracking-wider mt-0.5 text-amber-300 uppercase leading-tight text-center">
             DISCARD<br />ALL
           </span>
         </div>
       );
     }
 
-    // Number Card
+    // Number Card (0 to 9) with underline for 6 and 9 from custom card grid
+    const numStr = (face.value !== undefined ? face.value.toString() : face.type);
+    const isUnderlined = numStr === '6' || numStr === '9';
+
     return (
-      <span className={`font-heading font-black ${currentSize.center} drop-shadow-md tracking-tighter`}>
-        {face.value ?? face.type}
+      <span className={`font-heading font-black ${currentSize.center} drop-shadow-[0_2px_4px_rgba(0,0,0,0.95)] tracking-tighter ${isUnderlined ? 'underline decoration-white decoration-2 underline-offset-1' : ''}`}>
+        {numStr}
       </span>
     );
   };
@@ -377,16 +394,18 @@ export const ModernCard: React.FC<ModernCardProps> = ({
           : 'opacity-85 cursor-not-allowed'
       } ${isSelected ? '-translate-y-4 ring-4 ring-white shadow-2xl' : ''} ${className}`}
     >
-      {/* Center Ellipse Capsule */}
-      <div className="absolute inset-1 sm:inset-2 rounded-lg sm:rounded-xl bg-white/15 backdrop-blur-xs border border-white/25 flex items-center justify-center shadow-inner z-0">
-        <div className={style.text}>{renderCenterGraphic()}</div>
+      {/* Iconic Tilted Center Oval from Custom Card Grid */}
+      <div className="absolute inset-x-1 inset-y-1.5 sm:inset-x-1.5 sm:inset-y-2 rounded-[50%] -rotate-[22deg] bg-black/25 border-[1.5px] sm:border-2 border-white/50 flex items-center justify-center shadow-inner z-0 overflow-hidden">
+        <div className={`rotate-[22deg] flex items-center justify-center ${style.text}`}>
+          {renderCenterGraphic()}
+        </div>
       </div>
 
       {/* Top Left Corner (Foreground z-30) */}
       <div
         className={`absolute top-0.5 left-0.5 z-30 ${currentSize.corner} font-heading font-black leading-none ${style.text} pointer-events-none select-none`}
       >
-        <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] filter font-black text-xs sm:text-sm md:text-base tracking-tight">
+        <span className={`drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] filter font-black text-xs sm:text-sm md:text-base tracking-tight ${symbol === '6' || symbol === '9' ? 'underline decoration-white decoration-2 underline-offset-1' : ''}`}>
           {symbol}
         </span>
       </div>
@@ -395,7 +414,7 @@ export const ModernCard: React.FC<ModernCardProps> = ({
       <div
         className={`absolute bottom-0.5 right-0.5 z-30 ${currentSize.corner} font-heading font-black leading-none rotate-180 ${style.text} pointer-events-none select-none`}
       >
-        <span className="drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] filter font-black text-xs sm:text-sm md:text-base tracking-tight">
+        <span className={`drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)] filter font-black text-xs sm:text-sm md:text-base tracking-tight ${symbol === '6' || symbol === '9' ? 'underline decoration-white decoration-2 underline-offset-1' : ''}`}>
           {symbol}
         </span>
       </div>
